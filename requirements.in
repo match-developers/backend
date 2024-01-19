@@ -3,4 +3,5 @@ django-allauth
 djangorestframework
 markdown
 django-filter
-django-rest-auth
+isort
+black
