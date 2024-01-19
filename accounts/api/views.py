@@ -1,16 +1,15 @@
-import requests
-from rest_framework import status
-from rest_framework.response import Response
-from allauth.socialaccount.helpers import complete_social_login
-from allauth.socialaccount.models import SocialAccount
-from allauth.account.adapter import get_adapter
-from rest_framework.views import APIView
-from allauth.account.views import SignupView
 from django.contrib.auth import logout
 from django.http import JsonResponse
+
+import requests
+from allauth.account.adapter import get_adapter
+from allauth.account.views import SignupView
+from allauth.socialaccount.helpers import complete_social_login
+from allauth.socialaccount.models import SocialAccount
 from rest_framework import status
-from rest_framework.views import APIView
 from rest_framework.permissions import IsAuthenticated
+from rest_framework.response import Response
+from rest_framework.views import APIView
 
 
 def get_kakao_user_info(access_token):

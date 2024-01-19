@@ -1,10 +1,14 @@
-from django.urls import path
-from .views import SocialSignupView, SocialLoginView, KakaoSignupView, KakaoLoginView
-from rest_framework.authtoken.views import obtain_auth_token
-from allauth.account.views import ConfirmEmailView, PasswordResetView
 from django.contrib.auth.views import PasswordResetConfirmView
-from allauth.account.views import LoginView, LogoutView, PasswordChangeView
+from django.urls import path
+
+from allauth.account.views import (ConfirmEmailView, LoginView, LogoutView,
+                                   PasswordChangeView, PasswordResetView)
+from rest_framework.authtoken.views import obtain_auth_token
+
 from accounts.api.views import CustomRegisterView, LogoutAllView
+
+from .views import (KakaoLoginView, KakaoSignupView, SocialLoginView,
+                    SocialSignupView)
 
 urlpatterns = [
     # Social Authentication URLs
