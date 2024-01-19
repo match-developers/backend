@@ -1,1 +1,7 @@
-django
+django==4.2.3
+django-allauth
+djangorestframework
+markdown
+django-filter
+isort
+black
