@@ -11,6 +11,8 @@ https://docs.djangoproject.com/en/4.2/ref/settings/
 """
 
 from pathlib import Path
+from decouple import config
+
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -20,12 +22,14 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/4.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = "django-insecure-*tib0+!lbhyr968ktuu1hq+b)75m)yc*&)bvu74&^-l!*oq-6z"
+SECRET_KEY = config("SECRET_KEY")
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = config("DEBUG")
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = config(
+    "ALLOWED_HOSTS", cast=lambda v: [s.strip() for s in v.split(",")]
+)
 
 
 # Application definition
@@ -39,27 +43,64 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     "django.contrib.sites",
     "rest_framework",
-    "rest_framework.authtoken",    
-    "allauth",
-    "allauth.account",
-    "allauth.socialaccount",
-    "allauth.socialaccount.providers.apple",
-    "allauth.socialaccount.providers.facebook",
-    "allauth.socialaccount.providers.google",
-    "allauth.socialaccount.providers.kakao",
+    "oauth2_provider",
+    "social_django",
+    "drf_social_oauth2",
+    "corsheaders",
     "accounts",
 ]
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
+    "corsheaders.middleware.CorsMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
-    "allauth.account.middleware.AccountMiddleware",
 ]
+
+AUTHENTICATION_BACKENDS = (
+    "social_core.backends.google.GoogleOAuth2",
+    "social_core.backends.facebook.FacebookAppOAuth2",
+    "social_core.backends.facebook.FacebookOAuth2",
+    "drf_social_oauth2.backends.DjangoOAuth2",
+    "django.contrib.auth.backends.ModelBackend",
+)
+
+REST_FRAMEWORK = {
+    "DEFAULT_AUTHENTICATION_CLASSES": (
+        "oauth2_provider.contrib.rest_framework.OAuth2Authentication",
+        "drf_social_oauth2.authentication.SocialAuthentication",
+    )
+}
+
+CORS_ALLOWED_ORIGINS = [
+    "http://localhost:3000",
+    "http://127.0.0.1:3000",
+    "http://10.0.2.2:3000",
+]  # RN addresses
+
+# Facebook configuration
+SOCIAL_AUTH_FACEBOOK_KEY = config("SOCIAL_AUTH_FACEBOOK_KEY")
+SOCIAL_AUTH_FACEBOOK_SECRET = config("SOCIAL_AUTH_FACEBOOK_SECRET")
+
+# Define SOCIAL_AUTH_FACEBOOK_SCOPE to get extra permissions from Facebook.
+# Email is not sent by default, to get it, you must request the email permission.
+SOCIAL_AUTH_FACEBOOK_SCOPE = ["email"]
+SOCIAL_AUTH_FACEBOOK_PROFILE_EXTRA_PARAMS = {"fields": "id, name, email"}
+SOCIAL_AUTH_USER_FIELDS = ["email", "first_name", "username", "password"]
+
+SOCIAL_AUTH_GOOGLE_OAUTH2_KEY = config("SOCIAL_AUTH_GOOGLE_OAUTH2_KEY")
+SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET = config("SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET")
+
+# Define SOCIAL_AUTH_GOOGLE_OAUTH2_SCOPE to get extra permissions from Google.
+SOCIAL_AUTH_GOOGLE_OAUTH2_SCOPE = [
+    "https://www.googleapis.com/auth/userinfo.email",
+    "https://www.googleapis.com/auth/userinfo.profile",
+]
+
 
 ROOT_URLCONF = "core.urls"
 
@@ -74,52 +115,32 @@ TEMPLATES = [
                 "django.template.context_processors.request",
                 "django.contrib.auth.context_processors.auth",
                 "django.contrib.messages.context_processors.messages",
+                "social_django.context_processors.backends",
+                "social_django.context_processors.login_redirect",
             ],
         },
     },
 ]
 
-# https://docs.allauth.org/en/latest/installation/quickstart.html#quickstart
-
-AUTHENTICATION_BACKENDS = [
-    # Needed to login by username in Django admin, regardless of `allauth`
-    "django.contrib.auth.backends.ModelBackend",
-    # `allauth` specific authentication methods, such as login by email
-    "allauth.account.auth_backends.AuthenticationBackend",
-]
-
-AUTHENTICATION_CLASSES = [
-    "allauth.account.auth_backends.AuthenticationBackend",
-    "rest_framework.authentication.SessionAuthentication",
-]
+AUTH_USER_MODEL = "accounts.Account"
 
 SITE_ID = 1
 
-SOCIALACCOUNT_PROVIDERS = {
-    "google": {
-        "SCOPE": ["profile", "email"],
-        "AUTH_PARAMS": {"access_type": "online"},
-    },
-    "facebook": {
-        "METHOD": "js_sdk",
-        "SCOPE": ["email", "public_profile"],
-        "AUTH_PARAMS": {"auth_type": "reauthenticate"},
-        "FIELDS": [
-            "id",
-            "email",
-            "name",
-            "first_name",
-            "last_name",
-            "picture.type(large)",
-        ],
-    },
-    "apple": {
-        "SCOPE": ["name", "email"],
-    },
-    "kakao": {},
-}
-
 WSGI_APPLICATION = "core.wsgi.application"
+
+LOGGING = {
+    "version": 1,
+    "disable_existing_loggers": False,
+    "handlers": {
+        "console": {
+            "class": "logging.StreamHandler",
+        },
+    },
+    "root": {
+        "handlers": ["console"],
+        "level": "WARNING",
+    },
+}
 
 
 # Database

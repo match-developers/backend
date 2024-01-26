@@ -1,7 +1,9 @@
 django==4.2.3
-django-allauth
 djangorestframework
+django-cors-headers
+drf_social_oauth2
 markdown
 django-filter
 isort
 black
+python-decouple
