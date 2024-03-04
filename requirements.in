@@ -9,3 +9,4 @@ black
 python-decouple
 flake8
 psycopg2-binary
+pre-commit

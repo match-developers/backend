@@ -14,6 +14,8 @@ certifi==2023.11.17
     # via requests
 cffi==1.16.0
     # via cryptography
+cfgv==3.4.0
+    # via pre-commit
 charset-normalizer==3.3.2
     # via requests
 click==8.1.7
@@ -29,6 +31,8 @@ defusedxml==0.7.1
     #   social-auth-core
 deprecated==1.2.14
     # via jwcrypto
+distlib==0.3.8
+    # via virtualenv
 django==4.2.3
     # via
     #   -r requirements.in
@@ -51,8 +55,12 @@ drf-social-oauth2==2.1.3
     # via -r requirements.in
 ecdsa==0.18.0
     # via python-jose
+filelock==3.13.1
+    # via virtualenv
 flake8==7.0.0
     # via -r requirements.in
+identify==2.5.35
+    # via pre-commit
 idna==3.6
     # via requests
 isort==5.13.2
@@ -65,6 +73,8 @@ mccabe==0.7.0
     # via flake8
 mypy-extensions==1.0.0
     # via black
+nodeenv==1.8.0
+    # via pre-commit
 oauthlib==3.2.2
     # via
     #   django-oauth-toolkit
@@ -75,7 +85,11 @@ packaging==23.2
 pathspec==0.12.1
     # via black
 platformdirs==4.1.0
-    # via black
+    # via
+    #   black
+    #   virtualenv
+pre-commit==3.6.2
+    # via -r requirements.in
 psycopg2-binary==2.9.9
     # via -r requirements.in
 pyasn1==0.5.1
@@ -98,6 +112,8 @@ python3-openid==3.2.0
     # via social-auth-core
 pytz==2023.3.post1
     # via djangorestframework
+pyyaml==6.0.1
+    # via pre-commit
 requests==2.31.0
     # via
     #   django-oauth-toolkit
@@ -117,5 +133,10 @@ sqlparse==0.4.4
     # via django
 urllib3==2.1.0
     # via requests
+virtualenv==20.25.1
+    # via pre-commit
 wrapt==1.16.0
     # via deprecated
+
+# The following packages are considered to be unsafe in a requirements file:
+# setuptools
