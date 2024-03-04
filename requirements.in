@@ -7,3 +7,4 @@ django-filter
 isort
 black
 python-decouple
+flake8
