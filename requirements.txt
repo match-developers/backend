@@ -76,6 +76,8 @@ pathspec==0.12.1
     # via black
 platformdirs==4.1.0
     # via black
+psycopg2-binary==2.9.9
+    # via -r requirements.in
 pyasn1==0.5.1
     # via
     #   python-jose
@@ -91,9 +93,7 @@ pyjwt==2.8.0
 python-decouple==3.8
     # via -r requirements.in
 python-jose[cryptography]==3.3.0
-    # via
-    #   drf-social-oauth2
-    #   python-jose
+    # via drf-social-oauth2
 python3-openid==3.2.0
     # via social-auth-core
 pytz==2023.3.post1
