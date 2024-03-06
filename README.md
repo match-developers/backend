@@ -6,6 +6,7 @@ Prerequisites:
 - Python 3.11 is mandatory
 - Install virutalenv (`pip install virtualenv`)
 - Install pip-tools (`python -m pip install pip-tools`)
+- Install postgres15. Yiou can download Postgres.app and via Homebrew with `brew install postgresql@15` source: `https://www.postgresql.org/download/macosx/`
 
 1) Create a virtual environment in the root project folder:
 
