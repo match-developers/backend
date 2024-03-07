@@ -6,6 +6,8 @@ from .serializers import RegistrationSerializer, UsersSerializer
 from rest_framework import permissions
 from .models import Account
 
+from django.conf import settings
+
 import requests
 
 
@@ -18,12 +20,12 @@ class CreateAccount(APIView):
             new_user = reg_serializer.save()
             if new_user:
                 r = requests.post(
-                    "http://127.0.0.1:8000/api-auth/token",  # TODO change it later
+                    f"{settings.BACKEND_URL}/api-auth/token",
                     data={
                         "username": new_user.email,
                         "password": request.data["password"],
-                        "client_id": "7jAVcZzgJb0xo3v8j019vMlHh3ZK61rQhlHsWLfo",
-                        "client_secret": "InjSE9sOlfPXiMuRVEK5hh0Hm11aUTdexjgMx8C0cUbq7qz2n3TkurqcLl0Tay5zf596prwm5XPs0RcDCXb4BrE9NMNHLKr2RduA4bNsokNUTkXVvP9ewD2Rmnmaj9T4",
+                        "client_id": settings.APPLICATION_CLIENT_ID,
+                        "client_secret": settings.APPLICATION_CLIENT_SECRET,
                         "grant_type": "password",
                     },
                 )
