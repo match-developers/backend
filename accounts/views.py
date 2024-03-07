@@ -1,14 +1,13 @@
-from django.shortcuts import render
-from rest_framework.views import APIView
-from rest_framework import status, generics
-from rest_framework.response import Response
-from .serializers import RegistrationSerializer, UsersSerializer
-from rest_framework import permissions
-from .models import Account
-
 from django.conf import settings
+from django.shortcuts import render
 
 import requests
+from rest_framework import generics, permissions, status
+from rest_framework.response import Response
+from rest_framework.views import APIView
+
+from .models import Account
+from .serializers import RegistrationSerializer, UsersSerializer
 
 
 class CreateAccount(APIView):
