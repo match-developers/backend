@@ -5,7 +5,6 @@ from accounts.models import Account
 
 class Post(models.Model):
     title = models.CharField(max_length=255)
-    content = models.TextField()
     user = models.ForeignKey(Account, on_delete=models.CASCADE)
     created_at = models.DateTimeField(auto_now_add=True)
 
