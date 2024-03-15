@@ -1,12 +1,16 @@
 # Match backend
 
+
 ## Set up
 
-Prerequisites:
+
+### Prerequisites
 - Python 3.11 is mandatory
 - Install virutalenv (`pip install virtualenv`)
-- Install pip-tools (`python -m pip install pip-tools`)
-- Install postgres15. Yiou can download Postgres.app and via Homebrew with `brew install postgresql@15` source: `https://www.postgresql.org/download/macosx/`
+- Install postgres15. Download Postgres.app (https://postgresapp.com/) and via Homebrew with `brew install postgresql@15` source: `https://www.postgresql.org/download/macosx/`
+
+
+### Setting up and running the backend
 
 1) Create a virtual environment in the root project folder:
 
@@ -16,20 +20,30 @@ Prerequisites:
 
 ```source .venv/bin/activate```
 
-3) Install all the packages in the venv (match-venv):
+3) Install pip-tools
+
+```python -m pip install pip-tools```
+
+4) Install all the packages in the venv (.venv):
 
 ```pip install -r requirements.txt```
 
-## Running the backend
+5) Create a new Server in the Postgres.app in the left-bottom of the application with a +
 
-1) With venv activated, execute in one terminal this command to run Django server:
+6) Add match-backend to the name of that new server and start it.
+
+7) In terminal, in the root folder of your project with the env activated, run the migrations
+
+```python manage.py migrate```
+
+8) Now, with everything running (postgresql server and migrations applied), run the django server
 
 ```python manage.py runserver```
 
 
-### Adding new packages
+### Extra: Adding new packages
 
-For installing new packages
+If you want to add new packages:
 
 1) Add the name of the package (can be with its specific version) in `requirements.in`
 2) Run `pip-compile requirements.in` and `requirements.txt` will be updated automatically.
