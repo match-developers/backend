@@ -42,6 +42,7 @@ INSTALLED_APPS = [
     "django.contrib.messages",
     "django.contrib.staticfiles",
     "django.contrib.sites",
+    "django.contrib.gis",
     "rest_framework",
     "oauth2_provider",
     "social_django",
@@ -49,6 +50,8 @@ INSTALLED_APPS = [
     "corsheaders",
     "accounts",
     "newsfeed",
+    "sports",
+    "sportsgrounds",
 ]
 
 MIDDLEWARE = [
@@ -147,7 +150,7 @@ LOGGING = {
 
 DATABASES = {
     "default": {
-        "ENGINE": "django.db.backends.postgresql",
+        "ENGINE": "django.contrib.gis.db.backends.postgis",
         "NAME": config("POSTGRES_NAME"),
         "USER": config("POSTGRES_USER"),
         "PASSWORD": config("POSTGRES_PASSWORD"),

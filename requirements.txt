@@ -33,7 +33,7 @@ deprecated==1.2.14
     # via jwcrypto
 distlib==0.3.8
     # via virtualenv
-django==4.2.3
+django[argon2cffi,geo]==4.2.3
     # via
     #   -r requirements.in
     #   django-cors-headers
