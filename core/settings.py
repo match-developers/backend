@@ -49,9 +49,15 @@ INSTALLED_APPS = [
     "drf_social_oauth2",
     "corsheaders",
     "accounts",
+    "assistant",
+    "clubs",
+    "leagues",
+    "matchmaking",
     "newsfeed",
     "sports",
     "sportsgrounds",
+    "tournaments",
+    "userprofile",
 ]
 
 MIDDLEWARE = [
