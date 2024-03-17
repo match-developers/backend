@@ -1,5 +1,7 @@
 from django.db import models
 
+from model_utils.models import TimeStampedModel
+
 from accounts.models import Account
 from clubs.models import Club
 from matchmaking.choices import STATUS_CHOICES
@@ -7,7 +9,14 @@ from sports.choices import SPORT_CHOICES
 from sportsgrounds.models import SportGround
 
 
-class Match(models.Model):
+class Match(TimeStampedModel):
+    MATCH_TYPES = (
+        ("friendly", "Friendly"),
+        ("tournament", "Tournament"),
+        ("league", "League"),
+        ("ranked", "Ranked"),
+        ("competitive", "Competitive"),
+    )
     sports_ground = models.ForeignKey(SportGround, on_delete=models.CASCADE)
     sport = models.CharField(max_length=20, choices=SPORT_CHOICES)
     creator = models.ForeignKey(Account, on_delete=models.CASCADE)
@@ -31,24 +40,12 @@ class Match(models.Model):
     status = models.CharField(
         max_length=20, choices=STATUS_CHOICES, default="scheduled"
     )
-
-
-class IndividualMatch(Match):
-    # is_friendly is True if the match is a friendly match
-    # is_friendly is False if the match is a competitive/ranked match
-    is_friendly = models.BooleanField(default=True)
-
-
-class ClubMatch(Match):
-    MATCH_TYPES = (
-        ("friendly", "Friendly"),
-        ("tournament", "Tournament"),
-        ("league", "League"),
+    match_type = models.CharField(
+        max_length=20, choices=MATCH_TYPES, default="friendly"
     )
-    match_type = models.CharField(max_length=20, choices=MATCH_TYPES)
 
 
-class MatchScore(models.Model):
+class MatchScore(TimeStampedModel):
     match = models.OneToOneField(Match, related_name="score", on_delete=models.CASCADE)
     home_score = models.PositiveIntegerField(default=0)
     away_score = models.PositiveIntegerField(default=0)
@@ -79,7 +76,19 @@ class MatchParticipant(models.Model):
         unique_together = ("player", "match")
 
 
-class Goal(models.Model):
+class Goal(TimeStampedModel):
     match = models.ForeignKey(Match, related_name="goals", on_delete=models.CASCADE)
     scorer = models.ForeignKey(Account, on_delete=models.CASCADE)
     time_scored = models.DateTimeField()
+    is_penalty = models.BooleanField(default=False)
+    is_own_goal = models.BooleanField(default=False)
+
+
+class FriendlyClubMatch(models.Model):
+    home = models.ForeignKey(
+        Club, related_name="home_friendly_matches", on_delete=models.CASCADE
+    )
+    away = models.ForeignKey(
+        Club, related_name="away_friendly_matches", on_delete=models.CASCADE
+    )
+    match = models.ForeignKey(Match, on_delete=models.CASCADE)

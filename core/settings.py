@@ -48,6 +48,8 @@ INSTALLED_APPS = [
     "social_django",
     "drf_social_oauth2",
     "corsheaders",
+    "model_utils",
+    "django_extensions",
     "accounts",
     "assistant",
     "clubs",
