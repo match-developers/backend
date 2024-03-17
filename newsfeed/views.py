@@ -1,14 +1,21 @@
 from rest_framework import generics
 from rest_framework.permissions import IsAuthenticated
 
-from .models import Post
-from .serializers import PostSerializer
+from .models import ClubPost, IndividualPost
+from .serializers import ClubPostSerializer, IndividualPostSerializer
 
 
-class UserPostsAPIView(generics.ListAPIView):
-    serializer_class = PostSerializer
+class IndividualPostsAPIView(generics.ListAPIView):
+    serializer_class = IndividualPostSerializer
     permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
-        user_id = self.request.user.id
-        return Post.objects.filter(user_id=user_id)
+        return IndividualPost.objects.filter(user=self.request.user)
+
+
+class ClubPostsAPIView(generics.ListAPIView):
+    serializer_class = ClubPostSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        return ClubPost.objects.filter(user=self.request.user)

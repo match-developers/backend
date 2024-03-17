@@ -1,9 +1,15 @@
 from rest_framework import serializers
 
-from .models import Post
+from .models import ClubPost, IndividualPost
 
 
-class PostSerializer(serializers.ModelSerializer):
+class ClubPostSerializer(serializers.ModelSerializer):
     class Meta:
-        model = Post
-        fields = ["id", "title", "created_at"]
+        model = ClubPost
+        fields = "__all__"
+
+
+class IndividualPostSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = IndividualPost
+        fields = "__all__"
