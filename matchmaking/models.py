@@ -21,10 +21,18 @@ class Match(TimeStampedModel):
     sport = models.CharField(max_length=20, choices=SPORT_CHOICES)
     creator = models.ForeignKey(Account, on_delete=models.CASCADE)
     home = models.ForeignKey(
-        Club, related_name="home_matches", on_delete=models.CASCADE
+        Club,
+        related_name="home_matches",
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
     )
     away = models.ForeignKey(
-        Club, related_name="away_matches", on_delete=models.CASCADE
+        Club,
+        related_name="away_matches",
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
     )
     start_time = models.DateTimeField()
     duration = models.DurationField()
