@@ -1,3 +1,4 @@
+from django.core.exceptions import ValidationError
 from django.db import models
 
 from model_utils.models import TimeStampedModel
@@ -51,6 +52,16 @@ class Match(TimeStampedModel):
     match_type = models.CharField(
         max_length=20, choices=MATCH_TYPES, default="friendly"
     )
+
+    def clean(self):
+        if self.is_club and (not self.home or not self.away):
+            raise ValidationError(
+                "Both home and away clubs are required for club matches."
+            )
+
+    def save(self, *args, **kwargs):
+        self.full_clean()
+        super().save(*args, **kwargs)
 
 
 class MatchScore(TimeStampedModel):
