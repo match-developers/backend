@@ -9,13 +9,13 @@ from accounts.models import Account
 from matchmaking.models import Match
 
 
-class ClubPost(TimeStampedModel):
-    title = models.CharField(max_length=255)
-    user = models.ForeignKey(Account, on_delete=models.CASCADE)
-    match = models.ForeignKey(Match, on_delete=models.CASCADE)
+class MatchPost(TimeStampedModel):
+    """
+    Model for a post about a match. It replaces the Club Post
+    and Individual Post in the diagram.
 
+    """
 
-class IndividualPost(TimeStampedModel):
     title = models.CharField(max_length=255)
     user = models.ForeignKey(Account, on_delete=models.CASCADE)
     match = models.ForeignKey(Match, on_delete=models.CASCADE)

@@ -1,36 +1,19 @@
 from django.urls import path
 
-from .views import (
-    ClubPostViewSet,
-    IndividualPostViewSet,
-    LikeCommentView,
-    UnlikeCommentView,
-)
+from .views import LikeCommentView, MatchlPostViewSet, UnlikeCommentView
 
 urlpatterns = [
     path(
-        "individual_posts/",
-        IndividualPostViewSet.as_view({"get": "list", "post": "create"}),
-        name="individual_posts",
+        "match_posts/",
+        MatchlPostViewSet.as_view({"get": "list", "post": "create"}),
+        name="match_posts",
     ),
     path(
-        "individual_posts/<int:pk>/",
-        IndividualPostViewSet.as_view(
+        "match_posts/<int:pk>/",
+        MatchlPostViewSet.as_view(
             {"get": "retrieve", "put": "update", "delete": "destroy"}
         ),
-        name="individual_post_detail",
-    ),
-    path(
-        "club_posts/",
-        ClubPostViewSet.as_view({"get": "list", "post": "create"}),
-        name="club_posts",
-    ),
-    path(
-        "club_posts/<int:pk>/",
-        ClubPostViewSet.as_view(
-            {"get": "retrieve", "put": "update", "delete": "destroy"}
-        ),
-        name="club_post_detail",
+        name="match_post_detail",
     ),
     path(
         "like/<int:content_type_id>/<int:object_id>/",

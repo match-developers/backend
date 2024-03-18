@@ -6,19 +6,13 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework.viewsets import ModelViewSet
 
-from .models import ClubPost, IndividualPost, Like
-from .serializers import ClubPostSerializer, IndividualPostSerializer
+from .models import Like, MatchPost
+from .serializers import MatchPostSerializer
 
 
-class ClubPostViewSet(ModelViewSet):
-    queryset = ClubPost.objects.all()
-    serializer_class = ClubPostSerializer
-    permission_classes = [IsAuthenticated]
-
-
-class IndividualPostViewSet(ModelViewSet):
-    queryset = IndividualPost.objects.all()
-    serializer_class = IndividualPostSerializer
+class MatchlPostViewSet(ModelViewSet):
+    queryset = MatchPost.objects.all()
+    serializer_class = MatchPostSerializer
     permission_classes = [IsAuthenticated]
 
 

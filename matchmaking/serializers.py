@@ -1,17 +1,19 @@
 from rest_framework import serializers
 
-from .models import Match
+from .models import Match, MatchScore
 
 
-class MatchPostSerializer(serializers.ModelSerializer):
+class MatchPostContentSerializer(serializers.ModelSerializer):
+    score = serializers.SerializerMethodField()
+
     class Meta:
         model = Match
         fields = [
             "sports_ground",
             "sport",
-            "matchscore",
-            "home_club",
-            "away_club",
+            "score",
+            "home",
+            "away",
             "start_time",
             "duration",
             "is_public",
@@ -19,4 +21,19 @@ class MatchPostSerializer(serializers.ModelSerializer):
             "average_level",
             "status",
             "match_type",
+        ]
+
+    def get_score(self, obj):
+        if obj.score:
+            return MatchScoreSerializer(obj.score).data
+        return None
+
+
+class MatchScoreSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = MatchScore
+        fields = [
+            "home_score",
+            "away_score",
         ]
