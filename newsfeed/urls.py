@@ -1,6 +1,11 @@
 from django.urls import path
 
-from .views import ClubPostViewSet, IndividualPostViewSet
+from .views import (
+    ClubPostViewSet,
+    IndividualPostViewSet,
+    LikeCommentView,
+    UnlikeCommentView,
+)
 
 urlpatterns = [
     path(
@@ -26,5 +31,15 @@ urlpatterns = [
             {"get": "retrieve", "put": "update", "delete": "destroy"}
         ),
         name="club_post_detail",
+    ),
+    path(
+        "like/<int:content_type_id>/<int:object_id>/",
+        LikeCommentView.as_view(),
+        name="like_comment",
+    ),
+    path(
+        "unlike/<int:content_type_id>/<int:object_id>/",
+        UnlikeCommentView.as_view(),
+        name="unlike_comment",
     ),
 ]
