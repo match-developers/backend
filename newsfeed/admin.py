@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from .models import Comment, Like, MatchPost
+from .models import Comment, CustomPost
 
-admin.site.register(MatchPost)
+admin.site.register(CustomPost)
 admin.site.register(Comment)

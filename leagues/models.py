@@ -1,7 +1,12 @@
+from django.contrib.contenttypes.fields import GenericRelation
 from django.db import models
 
+from model_utils.models import TimeStampedModel
+
+from accounts.models import Account
 from clubs.models import Club
 from matchmaking.models import Match
+from newsfeed.models import Comment, Like
 
 
 class League(models.Model):
@@ -46,3 +51,12 @@ class LeaguePosition(models.Model):
 
     class Meta:
         unique_together = ("league", "club")
+
+
+class LeagueTablePost(TimeStampedModel):
+    title = models.CharField(max_length=255)
+    user = models.ForeignKey(Account, on_delete=models.CASCADE)
+    league = models.ForeignKey(League, on_delete=models.CASCADE)
+
+    comments = GenericRelation(Comment)
+    likes = GenericRelation(Like)

@@ -6,12 +6,13 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework.viewsets import ModelViewSet
 
-from .models import Like, MatchPost
-from .serializers import MatchPostSerializer
+from matchmaking.serializers import MatchPostSerializer
+
+from .models import CustomPost, Like
 
 
-class MatchlPostViewSet(ModelViewSet):
-    queryset = MatchPost.objects.all()
+class CustomPostViewSet(ModelViewSet):
+    queryset = CustomPost.objects.all()
     serializer_class = MatchPostSerializer
     permission_classes = [IsAuthenticated]
 

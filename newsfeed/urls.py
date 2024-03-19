@@ -1,19 +1,19 @@
 from django.urls import path
 
-from .views import LikeCommentView, MatchlPostViewSet, UnlikeCommentView
+from .views import CustomPostViewSet, LikeCommentView, UnlikeCommentView
 
 urlpatterns = [
     path(
-        "match_posts/",
-        MatchlPostViewSet.as_view({"get": "list", "post": "create"}),
-        name="match_posts",
+        "custom_posts/",
+        CustomPostViewSet.as_view({"get": "list", "post": "create"}),
+        name="custom_posts",
     ),
     path(
-        "match_posts/<int:pk>/",
-        MatchlPostViewSet.as_view(
+        "custom_posts/<int:pk>/",
+        CustomPostViewSet.as_view(
             {"get": "retrieve", "put": "update", "delete": "destroy"}
         ),
-        name="match_post_detail",
+        name="custom_post_detail",
     ),
     path(
         "like/<int:content_type_id>/<int:object_id>/",

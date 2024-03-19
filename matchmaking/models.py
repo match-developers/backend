@@ -1,3 +1,4 @@
+from django.contrib.contenttypes.fields import GenericRelation
 from django.core.exceptions import ValidationError
 from django.db import models
 
@@ -6,6 +7,7 @@ from model_utils.models import TimeStampedModel
 from accounts.models import Account
 from clubs.models import Club
 from matchmaking.choices import MATCH_TYPES, STATUS_CHOICES
+from newsfeed.models import Comment, Like
 from sports.choices import SPORT_CHOICES
 from sportsgrounds.models import SportGround
 
@@ -104,3 +106,17 @@ class FriendlyClubMatch(models.Model):
         Club, related_name="away_friendly_matches", on_delete=models.CASCADE
     )
     match = models.ForeignKey(Match, on_delete=models.CASCADE)
+
+
+class MatchPost(TimeStampedModel):
+    """
+    Model for a post about a match. It replaces the Club Post
+    and Individual Post in the diagram.
+
+    """
+
+    title = models.CharField(max_length=255)
+    user = models.ForeignKey(Account, on_delete=models.CASCADE)
+    match = models.ForeignKey(Match, on_delete=models.CASCADE)
+    comments = GenericRelation(Comment)
+    likes = GenericRelation(Like)
