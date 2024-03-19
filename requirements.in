@@ -13,4 +13,6 @@ pre-commit
 django-model-utils
 pyproj
 django-extensions
+Pillow
+
 

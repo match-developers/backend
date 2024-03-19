@@ -92,6 +92,8 @@ packaging==23.2
     # via black
 pathspec==0.12.1
     # via black
+pillow==10.2.0
+    # via -r requirements.in
 platformdirs==4.1.0
     # via
     #   black
