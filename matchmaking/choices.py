@@ -5,3 +5,10 @@ STATUS_CHOICES = (
     ("cancelled", "Cancelled"),
     ("unknown", "Unknown"),
 )
+MATCH_TYPES = (
+    ("friendly", "Friendly"),
+    ("tournament", "Tournament"),
+    ("league", "League"),
+    ("ranked", "Ranked"),
+    ("competitive", "Competitive"),
+)
