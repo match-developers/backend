@@ -1,5 +1,5 @@
-from django.contrib import admin
+from django.contrib.gis import admin
 
 from .models import SportGround
 
-admin.site.register(SportGround)
+admin.site.register(SportGround, admin.OSMGeoAdmin)
