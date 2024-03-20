@@ -7,10 +7,18 @@ from accounts.models import Account
 from newsfeed.models import Comment, Like
 
 
-class Club(models.Model):
+class Club(TimeStampedModel):
     name = models.CharField(max_length=100)
     user_name = models.CharField(max_length=100)
-    description = models.TextField(blank=True, null=True)
+    description = models.TextField(null=True, blank=True)
+    profile_picture = models.ImageField(upload_to="clubs/profile_pictures/")
+    owner = models.ForeignKey(
+        Account, related_name="clubs_owned", on_delete=models.CASCADE
+    )
+    foundation_date = models.DateField(null=True, blank=True)
+    members = models.ManyToManyField(
+        Account, related_name="club_memberships", blank=True
+    )
 
 
 class ClubGallery(TimeStampedModel):
@@ -21,7 +29,13 @@ class ClubGallery(TimeStampedModel):
 
 class ClubTransferInvitePost(TimeStampedModel):
     title = models.CharField(max_length=255)
-    user = models.ForeignKey(Account, on_delete=models.CASCADE)
+    user_invited = models.ForeignKey(Account, on_delete=models.CASCADE)
+    club = models.ForeignKey(Club, on_delete=models.CASCADE)
 
     comments = GenericRelation(Comment)
     likes = GenericRelation(Like)
+
+    def save(self, *args, **kwargs):
+        if self.user_invited in self.club.members.all():
+            raise ValueError("User is already a member of the club")
+        super().save(*args, **kwargs)
