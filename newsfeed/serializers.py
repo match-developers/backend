@@ -8,8 +8,12 @@ from .models import Comment, CustomPost
 
 
 class CustomPostSerializer(serializers.ModelSerializer):
-    # TODO
-    pass
+    likes = serializers.IntegerField(source="likes.count")
+
+    class Meta:
+        model = CustomPost
+        fields = ("title", "user", "likes", "content_object")
+        depth = 1
 
 
 class CommentSerializer(serializers.ModelSerializer):
