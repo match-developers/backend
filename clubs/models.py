@@ -23,7 +23,7 @@ class Club(TimeStampedModel):
 
 class ClubGallery(TimeStampedModel):
     image = models.ImageField(upload_to="clubs/gallery/")
-    description = models.TextField()
+    description = models.TextField(blank=True, null=True)
     club = models.ForeignKey(Club, related_name="gallery", on_delete=models.CASCADE)
 
 

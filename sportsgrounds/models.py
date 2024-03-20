@@ -11,7 +11,7 @@ class SportGround(models.Model):
 
 class SportGroundGallery(TimeStampedModel):
     image = models.ImageField(upload_to="sportsgrounds/gallery/")
-    description = models.TextField()
+    description = models.TextField(blank=True, null=True)
     sportground = models.ForeignKey(
         SportGround, related_name="gallery", on_delete=models.CASCADE
     )
