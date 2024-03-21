@@ -28,6 +28,11 @@ class ClubGallery(TimeStampedModel):
 
 
 class ClubTransferInvitePost(TimeStampedModel):
+    """
+    Club owner invites a user to join the club.
+
+    """
+
     title = models.CharField(max_length=255)
     user_invited = models.ForeignKey(Account, on_delete=models.CASCADE)
     club = models.ForeignKey(Club, on_delete=models.CASCADE)
@@ -39,3 +44,54 @@ class ClubTransferInvitePost(TimeStampedModel):
         if self.user_invited in self.club.members.all():
             raise ValueError("User is already a member of the club")
         super().save(*args, **kwargs)
+
+
+class ClubTransferDonePost(TimeStampedModel):
+    """
+    User has moved to a new club.
+
+    """
+
+    title = models.CharField(max_length=255)
+    user = models.ForeignKey(Account, on_delete=models.CASCADE)
+    previous_club = models.ForeignKey(
+        Club, related_name="transfers_from_club_done", on_delete=models.CASCADE
+    )
+    new_club = models.ForeignKey(
+        Club, related_name="transfers_to_club_done", on_delete=models.CASCADE
+    )
+
+    comments = GenericRelation(Comment)
+    likes = GenericRelation(Like)
+
+
+class ClubTransferInterestPost(TimeStampedModel):
+    """
+    User is interested in moving to a new club.
+    The post can be sent to the club owner or
+    can be sent to club community.
+
+    """
+
+    title = models.CharField(max_length=255)
+    user = models.ForeignKey(Account, on_delete=models.CASCADE)
+    club = models.ForeignKey(Club, on_delete=models.CASCADE)
+    joining_message = models.TextField(blank=True, null=True)
+
+    comments = GenericRelation(Comment)
+    likes = GenericRelation(Like)
+
+
+class ClubQuitPost(TimeStampedModel):
+    """
+    User has quit the club.
+
+    """
+
+    title = models.CharField(max_length=255)
+    user = models.ForeignKey(Account, on_delete=models.CASCADE)
+    club = models.ForeignKey(Club, on_delete=models.CASCADE)
+    quiting_message = models.TextField(blank=True, null=True)
+
+    comments = GenericRelation(Comment)
+    likes = GenericRelation(Like)
