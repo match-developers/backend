@@ -95,3 +95,18 @@ class ClubQuitPost(TimeStampedModel):
 
     comments = GenericRelation(Comment)
     likes = GenericRelation(Like)
+
+
+class ClubNewMemberPost(TimeStampedModel):
+    """
+    User without club has joined to the club.
+
+    """
+
+    title = models.CharField(max_length=255)
+    user = models.ForeignKey(Account, on_delete=models.CASCADE)
+    new_club = models.ForeignKey(Club, on_delete=models.CASCADE)
+    joining_message = models.TextField(blank=True, null=True)
+
+    comments = GenericRelation(Comment)
+    likes = GenericRelation(Like)
