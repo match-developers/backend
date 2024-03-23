@@ -6,15 +6,18 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework.viewsets import ModelViewSet
 
-from matchmaking.serializers import MatchPostSerializer
-
 from .models import CustomPost, Like
+from .serializers import CustomPostCreateSerializer, CustomPostRetrieveSerializer
 
 
 class CustomPostViewSet(ModelViewSet):
     queryset = CustomPost.objects.all()
-    serializer_class = MatchPostSerializer
     permission_classes = [IsAuthenticated]
+
+    def get_serializer_class(self):
+        if self.action == "create":
+            return CustomPostCreateSerializer
+        return CustomPostRetrieveSerializer
 
 
 class LikeCommentView(APIView):
