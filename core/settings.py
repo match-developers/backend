@@ -247,3 +247,5 @@ LOGGING = {
         },
     },
 }
+
+GDAL_LIBRARY_PATH = config("GDAL_LIBRARY_PATH")
