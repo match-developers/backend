@@ -14,5 +14,4 @@ django-model-utils
 pyproj
 django-extensions
 Pillow
-
-
+factory-boy
