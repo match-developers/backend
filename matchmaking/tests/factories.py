@@ -2,33 +2,31 @@ import factory
 import factory.fuzzy
 
 from matchmaking.choices import MATCH_TYPES, STATUS_CHOICES
-from matchmaking.models import (
-    Goal,
-    Match,
-    MatchParticipant,
-    MatchPost,
-    MatchScore,
-    SportPosition,
-)
-from sports.choices import SPORT_CHOICES
-
-
-class SportPositionFactory(factory.django.DjangoModelFactory):
-    sport = factory.fuzzy.FuzzyChoice([x[0] for x in SPORT_CHOICES])
-    description = factory.Faker("text")
-
-    class Meta:
-        model = SportPosition
+from matchmaking.models import Goal, Match, MatchParticipant, MatchPost, MatchScore
 
 
 class MatchParticipantFactory(factory.django.DjangoModelFactory):
     player = factory.SubFactory("accounts.tests.factories.AccountFactory")
-    club = factory.SubFactory("clubs.tests.factories.ClubFactory")
-    position = factory.SubFactory(SportPositionFactory)
+    club = factory.Maybe(
+        "should_have_club",
+        yes_declaration=factory.SubFactory("clubs.tests.factories.ClubFactory"),
+        no_declaration=None,
+    )
+    position = factory.Maybe(
+        "should_have_position",
+        yes_declaration=factory.SubFactory(
+            "sports.tests.factories.SportPositionFactory"
+        ),
+        no_declaration=None,
+    )
     is_home_team = factory.Faker("boolean")
 
     class Meta:
         model = MatchParticipant
+
+    class Params:
+        should_have_club = factory.Faker("boolean")
+        should_have_position = factory.Faker("boolean")
 
 
 class MatchFactory(factory.django.DjangoModelFactory):
@@ -43,8 +41,16 @@ class MatchFactory(factory.django.DjangoModelFactory):
     is_club = factory.Faker("boolean")
     total_spots = factory.fuzzy.FuzzyInteger(0, 22)
     average_level = factory.fuzzy.FuzzyInteger(1, 10)
-    home = factory.SubFactory("clubs.tests.factories.ClubFactory")
-    away = factory.SubFactory("clubs.tests.factories.ClubFactory")
+    home = factory.Maybe(
+        "is_club",
+        yes_declaration=factory.SubFactory("clubs.tests.factories.ClubFactory"),
+        no_declaration=None,
+    )
+    away = factory.Maybe(
+        "is_club",
+        yes_declaration=factory.SubFactory("clubs.tests.factories.ClubFactory"),
+        no_declaration=None,
+    )
     status = factory.fuzzy.FuzzyChoice([x[0] for x in STATUS_CHOICES])
     match_type = factory.fuzzy.FuzzyChoice([x[0] for x in MATCH_TYPES])
 
@@ -56,6 +62,13 @@ class MatchFactory(factory.django.DjangoModelFactory):
 
     class Meta:
         model = Match
+
+    @classmethod
+    def _create(cls, model_class, *args, **kwargs):
+        instance = model_class(*args, **kwargs)
+        instance.full_clean()
+        instance.save()
+        return instance
 
 
 class MatchScoreFactory(factory.django.DjangoModelFactory):
@@ -83,8 +96,12 @@ class MatchPostFactory(factory.django.DjangoModelFactory):
     user = factory.SubFactory("accounts.tests.factories.AccountFactory")
     match = factory.SubFactory(MatchFactory)
 
-    comments = factory.RelatedFactory("newsfeed.tests.factories.CommentFactory")
-    likes = factory.RelatedFactory("newsfeed.tests.factories.LikeFactory")
+    comments = factory.RelatedFactory(
+        "newsfeed.tests.factories.CommentFactory", "content_object"
+    )
+    likes = factory.RelatedFactory(
+        "newsfeed.tests.factories.LikeFactory", "content_object"
+    )
 
     class Meta:
         model = MatchPost

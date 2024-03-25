@@ -15,12 +15,12 @@ class CustomPostFactory(factory.django.DjangoModelFactory):
     title = factory.Faker("sentence")
     user = factory.SubFactory("accounts.tests.factories.AccountFactory")
 
-    comments = factory.RelatedFactory("newsfeed.tests.factories.CommentFactory")
-    likes = factory.RelatedFactory("newsfeed.tests.factories.LikeFactory")
-
-    content_type = factory.Faker("word")
-    object_id = factory.Faker("random_int")
-    # content_object = factory.SubFactory("accounts.tests.factories.AccountFactory")
+    comments = factory.RelatedFactory(
+        "newsfeed.tests.factories.CommentFactory", "content_object"
+    )
+    likes = factory.RelatedFactory(
+        "newsfeed.tests.factories.LikeFactory", "content_object"
+    )
 
     class Meta:
         model = CustomPost
@@ -28,9 +28,6 @@ class CustomPostFactory(factory.django.DjangoModelFactory):
 
 class LikeFactory(factory.django.DjangoModelFactory):
     user = factory.SubFactory("accounts.tests.factories.AccountFactory")
-    content_type = factory.Faker("word")
-    object_id = factory.Faker("random_int")
-    # content_object = factory.SubFactory("accounts.tests.factories.AccountFactory")
 
     class Meta:
         model = Like
@@ -38,10 +35,7 @@ class LikeFactory(factory.django.DjangoModelFactory):
 
 class CommentFactory(factory.django.DjangoModelFactory):
     user = factory.SubFactory("accounts.tests.factories.AccountFactory")
-    content_type = factory.Faker("word")
-    object_id = factory.Faker("random_int")
     content = factory.Faker("text")
-    # content_object = factory.SubFactory("accounts.tests.factories.AccountFactory")
 
     class Meta:
         model = Comment

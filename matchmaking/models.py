@@ -9,15 +9,8 @@ from clubs.models import Club
 from matchmaking.choices import MATCH_TYPES, STATUS_CHOICES
 from newsfeed.models import Comment, Like
 from sports.choices import SPORT_CHOICES
+from sports.models import SportPosition
 from sportsgrounds.models import SportGround
-
-
-class SportPosition(models.Model):
-    sport = models.CharField(max_length=20, choices=SPORT_CHOICES)
-    position_name = models.CharField(max_length=50)
-
-    def __str__(self):
-        return self.position_name
 
 
 class MatchParticipant(models.Model):

@@ -20,7 +20,7 @@ class LeagueFactory(factory.django.DjangoModelFactory):
 
 class LeagueRoundFactory(factory.django.DjangoModelFactory):
     league = factory.SubFactory(LeagueFactory)
-    name = factory.Faker("name")
+    name = factory.Sequence(lambda n: f"Round {n+1}")
 
     class Meta:
         model = LeagueRound
@@ -30,7 +30,9 @@ class LeagueMatchFactory(factory.django.DjangoModelFactory):
     round = factory.SubFactory(LeagueRoundFactory)
     home = factory.SubFactory("clubs.tests.factories.ClubFactory")
     away = factory.SubFactory("clubs.tests.factories.ClubFactory")
-    match = factory.SubFactory("matchmaking.tests.factories.MatchFactory")
+    match = factory.SubFactory(
+        "matchmaking.tests.factories.MatchFactory", match_type="league"
+    )
 
     class Meta:
         model = LeagueMatch
@@ -58,8 +60,12 @@ class LeagueTablePostFactory(factory.django.DjangoModelFactory):
     user = factory.SubFactory("accounts.tests.factories.AccountFactory")
     league = factory.SubFactory(LeagueFactory)
 
-    comments = factory.RelatedFactory("newsfeed.tests.factories.CommentFactory")
-    likes = factory.RelatedFactory("newsfeed.tests.factories.LikeFactory")
+    comments = factory.RelatedFactory(
+        "newsfeed.tests.factories.CommentFactory", "content_object"
+    )
+    likes = factory.RelatedFactory(
+        "newsfeed.tests.factories.LikeFactory", "content_object"
+    )
 
     class Meta:
         model = LeagueTablePost
