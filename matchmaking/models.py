@@ -115,19 +115,6 @@ class Goal(TimeStampedModel):
         return f"{self.scorer} scored at {self.time_scored}"
 
 
-class FriendlyClubMatch(models.Model):
-    home = models.ForeignKey(
-        Club, related_name="home_friendly_matches", on_delete=models.CASCADE
-    )
-    away = models.ForeignKey(
-        Club, related_name="away_friendly_matches", on_delete=models.CASCADE
-    )
-    match = models.ForeignKey(Match, on_delete=models.CASCADE)
-
-    def __str__(self):
-        return f"{self.home} vs {self.away}"
-
-
 class MatchPost(TimeStampedModel):
     """
     Model for a post about a match. It replaces the Club Post
