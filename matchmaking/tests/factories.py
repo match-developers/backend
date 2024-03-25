@@ -56,7 +56,7 @@ class MatchFactory(factory.django.DjangoModelFactory):
 
     participants = factory.RelatedFactoryList(
         MatchParticipantFactory,
-        factory_related_name="match",
+        factory_related_name="matches",
         size=2,
     )
 

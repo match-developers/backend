@@ -22,14 +22,22 @@ class ClubFactory(factory.django.DjangoModelFactory):
     profile_picture = factory.django.ImageField(color="blue")
     owner = factory.SubFactory("accounts.tests.factories.AccountFactory")
     foundation_date = factory.Faker("date")
-    members = factory.RelatedFactoryList(
-        "accounts.tests.factories.AccountFactory",
-        factory_related_name="club",
-        size=lambda: random.randint(0, AccountFactory._meta.model.objects.count()),
-    )
 
     class Meta:
         model = Club
+
+    @factory.post_generation
+    def members(self, create, extracted, **kwargs):
+        if not create:
+            return
+
+        if extracted:
+            for member in extracted:
+                self.members.add(member)
+        else:
+            for _ in range(random.randint(0, 10)):
+                member = AccountFactory()
+                self.members.add(member)
 
 
 class ClubGalleryFactory(factory.django.DjangoModelFactory):
