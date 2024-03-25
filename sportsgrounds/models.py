@@ -8,6 +8,9 @@ class SportGround(models.Model):
     location = models.PointField()
     description = models.TextField(blank=True, null=True)
 
+    def __str__(self):
+        return self.name
+
 
 class SportGroundGallery(TimeStampedModel):
     image = models.ImageField(upload_to="sportsgrounds/gallery/")
@@ -15,3 +18,6 @@ class SportGroundGallery(TimeStampedModel):
     sportground = models.ForeignKey(
         SportGround, related_name="gallery", on_delete=models.CASCADE
     )
+
+    def __str__(self):
+        return f"{self.sportground} gallery"

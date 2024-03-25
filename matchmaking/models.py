@@ -16,6 +16,9 @@ class SportPosition(models.Model):
     sport = models.CharField(max_length=20, choices=SPORT_CHOICES)
     position_name = models.CharField(max_length=50)
 
+    def __str__(self):
+        return self.position_name
+
 
 class MatchParticipant(models.Model):
     player = models.ForeignKey(Account, on_delete=models.CASCADE)
@@ -24,6 +27,9 @@ class MatchParticipant(models.Model):
         SportPosition, null=True, blank=True, on_delete=models.CASCADE
     )
     is_home_team = models.BooleanField(default=True)
+
+    def __str__(self):
+        return f"{self.player} ({self.club})"
 
 
 class Match(TimeStampedModel):
@@ -83,11 +89,19 @@ class Match(TimeStampedModel):
         self.full_clean()
         super().save(*args, **kwargs)
 
+    def __str__(self):
+        return f"{self.home} vs {self.away}"
+
 
 class MatchScore(TimeStampedModel):
     match = models.OneToOneField(Match, related_name="score", on_delete=models.CASCADE)
     home_score = models.PositiveIntegerField(default=0)
     away_score = models.PositiveIntegerField(default=0)
+
+    def __str__(self):
+        return (
+            f"{self.match.home} {self.home_score} - {self.away_score} {self.match.away}"
+        )
 
 
 class Goal(TimeStampedModel):
@@ -96,6 +110,9 @@ class Goal(TimeStampedModel):
     time_scored = models.DateTimeField()
     is_penalty = models.BooleanField(default=False)
     is_own_goal = models.BooleanField(default=False)
+
+    def __str__(self):
+        return f"{self.scorer} scored at {self.time_scored}"
 
 
 class FriendlyClubMatch(models.Model):
@@ -106,6 +123,9 @@ class FriendlyClubMatch(models.Model):
         Club, related_name="away_friendly_matches", on_delete=models.CASCADE
     )
     match = models.ForeignKey(Match, on_delete=models.CASCADE)
+
+    def __str__(self):
+        return f"{self.home} vs {self.away}"
 
 
 class MatchPost(TimeStampedModel):
@@ -120,3 +140,6 @@ class MatchPost(TimeStampedModel):
     match = models.ForeignKey(Match, on_delete=models.CASCADE)
     comments = GenericRelation(Comment)
     likes = GenericRelation(Like)
+
+    def __str__(self):
+        return f"{self.title} - {self.match}"

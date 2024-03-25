@@ -13,10 +13,16 @@ class League(models.Model):
     name = models.CharField(max_length=100)
     season = models.CharField(max_length=100)
 
+    def __str__(self):
+        return f"{self.name} - {self.season}"
+
 
 class LeagueRound(models.Model):
     league = models.ForeignKey(League, related_name="rounds", on_delete=models.CASCADE)
     name = models.CharField(max_length=100)
+
+    def __str__(self):
+        return f"{self.league} - {self.name}"
 
 
 class LeagueMatch(models.Model):
@@ -30,6 +36,9 @@ class LeagueMatch(models.Model):
         Club, related_name="away_league_matches", on_delete=models.CASCADE
     )
     match = models.ForeignKey(Match, on_delete=models.CASCADE)
+
+    def __str__(self):
+        return f"{self.home} vs {self.away}"
 
 
 class LeaguePosition(models.Model):
@@ -52,6 +61,9 @@ class LeaguePosition(models.Model):
     class Meta:
         unique_together = ("league", "club")
 
+    def __str__(self):
+        return f"{self.club} - {self.league}"
+
 
 class LeagueTablePost(TimeStampedModel):
     title = models.CharField(max_length=255)
@@ -60,3 +72,6 @@ class LeagueTablePost(TimeStampedModel):
 
     comments = GenericRelation(Comment)
     likes = GenericRelation(Like)
+
+    def __str__(self):
+        return f"{self.title} - {self.league}"

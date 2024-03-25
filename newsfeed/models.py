@@ -14,12 +14,18 @@ class Comment(TimeStampedModel):
     content_object = GenericForeignKey("content_type", "object_id")
     content = models.TextField()
 
+    def __str__(self):
+        return f"{self.user} commented on {self.content_object}"
+
 
 class Like(TimeStampedModel):
     user = models.ForeignKey(Account, on_delete=models.CASCADE)
     content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE)
     object_id = models.PositiveIntegerField()
     content_object = GenericForeignKey("content_type", "object_id")
+
+    def __str__(self):
+        return f"{self.user} liked {self.content_object}"
 
 
 class CustomPost(TimeStampedModel):
@@ -31,6 +37,9 @@ class CustomPost(TimeStampedModel):
     content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE)
     object_id = models.PositiveIntegerField()
     content_object = GenericForeignKey("content_type", "object_id")
+
+    def __str__(self):
+        return self.title
 
 
 class ImageAttachment(models.Model):

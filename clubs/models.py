@@ -20,11 +20,17 @@ class Club(TimeStampedModel):
         Account, related_name="club_memberships", blank=True
     )
 
+    def __str__(self):
+        return self.name
+
 
 class ClubGallery(TimeStampedModel):
     image = models.ImageField(upload_to="clubs/gallery/")
     description = models.TextField(blank=True, null=True)
     club = models.ForeignKey(Club, related_name="gallery", on_delete=models.CASCADE)
+
+    def __str__(self):
+        return f"{self.club} gallery"
 
 
 class ClubTransferInvitePost(TimeStampedModel):
@@ -45,6 +51,9 @@ class ClubTransferInvitePost(TimeStampedModel):
             raise ValueError("User is already a member of the club")
         super().save(*args, **kwargs)
 
+    def __str__(self):
+        return f"{self.user_invited} invited to {self.club}"
+
 
 class ClubTransferDonePost(TimeStampedModel):
     """
@@ -64,6 +73,9 @@ class ClubTransferDonePost(TimeStampedModel):
     comments = GenericRelation(Comment)
     likes = GenericRelation(Like)
 
+    def __str__(self):
+        return f"{self.user} moved from {self.previous_club} to {self.new_club}"
+
 
 class ClubTransferInterestPost(TimeStampedModel):
     """
@@ -81,6 +93,9 @@ class ClubTransferInterestPost(TimeStampedModel):
     comments = GenericRelation(Comment)
     likes = GenericRelation(Like)
 
+    def __str__(self):
+        return f"{self.user} is interested in {self.club}"
+
 
 class ClubQuitPost(TimeStampedModel):
     """
@@ -96,6 +111,9 @@ class ClubQuitPost(TimeStampedModel):
     comments = GenericRelation(Comment)
     likes = GenericRelation(Like)
 
+    def __str__(self):
+        return f"{self.user} quit the {self.club}"
+
 
 class ClubNewMemberPost(TimeStampedModel):
     """
@@ -110,3 +128,6 @@ class ClubNewMemberPost(TimeStampedModel):
 
     comments = GenericRelation(Comment)
     likes = GenericRelation(Like)
+
+    def __str__(self):
+        return f"{self.user} joined to {self.new_club}"
