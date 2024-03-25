@@ -10,3 +10,9 @@ python-decouple
 flake8
 psycopg2-binary
 pre-commit
+django-model-utils
+pyproj
+django-extensions
+Pillow
+
+

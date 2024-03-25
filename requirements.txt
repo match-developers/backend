@@ -11,7 +11,9 @@ asgiref==3.7.2
 black==23.12.1
     # via -r requirements.in
 certifi==2023.11.17
-    # via requests
+    # via
+    #   pyproj
+    #   requests
 cffi==1.16.0
     # via cryptography
 cfgv==3.4.0
@@ -37,13 +39,19 @@ django==4.2.3
     # via
     #   -r requirements.in
     #   django-cors-headers
+    #   django-extensions
     #   django-filter
+    #   django-model-utils
     #   django-oauth-toolkit
     #   djangorestframework
     #   social-auth-app-django
 django-cors-headers==4.3.1
     # via -r requirements.in
+django-extensions==3.2.3
+    # via -r requirements.in
 django-filter==23.5
+    # via -r requirements.in
+django-model-utils==4.4.0
     # via -r requirements.in
 django-oauth-toolkit==2.3.0
     # via drf-social-oauth2
@@ -84,6 +92,8 @@ packaging==23.2
     # via black
 pathspec==0.12.1
     # via black
+pillow==10.2.0
+    # via -r requirements.in
 platformdirs==4.1.0
     # via
     #   black
@@ -104,6 +114,8 @@ pyflakes==3.2.0
     # via flake8
 pyjwt==2.8.0
     # via social-auth-core
+pyproj==3.6.1
+    # via -r requirements.in
 python-decouple==3.8
     # via -r requirements.in
 python-jose[cryptography]==3.3.0

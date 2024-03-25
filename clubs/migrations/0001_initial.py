@@ -13,12 +13,11 @@ class Migration(migrations.Migration):
 
     dependencies = [
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
-        ("contenttypes", "0002_remove_content_type_name"),
     ]
 
     operations = [
         migrations.CreateModel(
-            name="Like",
+            name="Club",
             fields=[
                 (
                     "id",
@@ -45,18 +44,27 @@ class Migration(migrations.Migration):
                         verbose_name="modified",
                     ),
                 ),
-                ("object_id", models.PositiveIntegerField()),
+                ("name", models.CharField(max_length=100)),
+                ("user_name", models.CharField(max_length=100)),
+                ("description", models.TextField(blank=True, null=True)),
                 (
-                    "content_type",
-                    models.ForeignKey(
-                        on_delete=django.db.models.deletion.CASCADE,
-                        to="contenttypes.contenttype",
+                    "profile_picture",
+                    models.ImageField(upload_to="clubs/profile_pictures/"),
+                ),
+                ("foundation_date", models.DateField(blank=True, null=True)),
+                (
+                    "members",
+                    models.ManyToManyField(
+                        blank=True,
+                        related_name="club_memberships",
+                        to=settings.AUTH_USER_MODEL,
                     ),
                 ),
                 (
-                    "user",
+                    "owner",
                     models.ForeignKey(
                         on_delete=django.db.models.deletion.CASCADE,
+                        related_name="clubs_owned",
                         to=settings.AUTH_USER_MODEL,
                     ),
                 ),
@@ -66,7 +74,7 @@ class Migration(migrations.Migration):
             },
         ),
         migrations.CreateModel(
-            name="CustomPost",
+            name="ClubTransferInvitePost",
             fields=[
                 (
                     "id",
@@ -94,17 +102,14 @@ class Migration(migrations.Migration):
                     ),
                 ),
                 ("title", models.CharField(max_length=255)),
-                ("content", models.TextField()),
-                ("object_id", models.PositiveIntegerField()),
                 (
-                    "content_type",
+                    "club",
                     models.ForeignKey(
-                        on_delete=django.db.models.deletion.CASCADE,
-                        to="contenttypes.contenttype",
+                        on_delete=django.db.models.deletion.CASCADE, to="clubs.club"
                     ),
                 ),
                 (
-                    "user",
+                    "user_invited",
                     models.ForeignKey(
                         on_delete=django.db.models.deletion.CASCADE,
                         to=settings.AUTH_USER_MODEL,
@@ -116,7 +121,7 @@ class Migration(migrations.Migration):
             },
         ),
         migrations.CreateModel(
-            name="Comment",
+            name="ClubGallery",
             fields=[
                 (
                     "id",
@@ -143,20 +148,14 @@ class Migration(migrations.Migration):
                         verbose_name="modified",
                     ),
                 ),
-                ("object_id", models.PositiveIntegerField()),
-                ("content", models.TextField()),
+                ("image", models.ImageField(upload_to="clubs/gallery/")),
+                ("description", models.TextField()),
                 (
-                    "content_type",
+                    "club",
                     models.ForeignKey(
                         on_delete=django.db.models.deletion.CASCADE,
-                        to="contenttypes.contenttype",
-                    ),
-                ),
-                (
-                    "user",
-                    models.ForeignKey(
-                        on_delete=django.db.models.deletion.CASCADE,
-                        to=settings.AUTH_USER_MODEL,
+                        related_name="gallery",
+                        to="clubs.club",
                     ),
                 ),
             ],

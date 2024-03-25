@@ -1,3 +1,15 @@
-from django.contrib import admin
+from django.contrib.gis import admin
 
-# Register your models here.
+from .models import SportGround, SportGroundGallery
+
+
+class SportGroundGalleryInline(admin.StackedInline):
+    model = SportGroundGallery
+    extra = 1  # Number of extra forms to display
+
+
+class SportGroundAdmin(admin.OSMGeoAdmin):
+    inlines = [SportGroundGalleryInline]
+
+
+admin.site.register(SportGround, SportGroundAdmin)

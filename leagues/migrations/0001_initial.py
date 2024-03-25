@@ -13,12 +13,13 @@ class Migration(migrations.Migration):
 
     dependencies = [
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
-        ("contenttypes", "0002_remove_content_type_name"),
+        ("matchmaking", "0001_initial"),
+        ("clubs", "0001_initial"),
     ]
 
     operations = [
         migrations.CreateModel(
-            name="Like",
+            name="League",
             fields=[
                 (
                     "id",
@@ -29,44 +30,12 @@ class Migration(migrations.Migration):
                         verbose_name="ID",
                     ),
                 ),
-                (
-                    "created",
-                    model_utils.fields.AutoCreatedField(
-                        default=django.utils.timezone.now,
-                        editable=False,
-                        verbose_name="created",
-                    ),
-                ),
-                (
-                    "modified",
-                    model_utils.fields.AutoLastModifiedField(
-                        default=django.utils.timezone.now,
-                        editable=False,
-                        verbose_name="modified",
-                    ),
-                ),
-                ("object_id", models.PositiveIntegerField()),
-                (
-                    "content_type",
-                    models.ForeignKey(
-                        on_delete=django.db.models.deletion.CASCADE,
-                        to="contenttypes.contenttype",
-                    ),
-                ),
-                (
-                    "user",
-                    models.ForeignKey(
-                        on_delete=django.db.models.deletion.CASCADE,
-                        to=settings.AUTH_USER_MODEL,
-                    ),
-                ),
+                ("name", models.CharField(max_length=100)),
+                ("season", models.CharField(max_length=100)),
             ],
-            options={
-                "abstract": False,
-            },
         ),
         migrations.CreateModel(
-            name="CustomPost",
+            name="LeagueTablePost",
             fields=[
                 (
                     "id",
@@ -94,13 +63,10 @@ class Migration(migrations.Migration):
                     ),
                 ),
                 ("title", models.CharField(max_length=255)),
-                ("content", models.TextField()),
-                ("object_id", models.PositiveIntegerField()),
                 (
-                    "content_type",
+                    "league",
                     models.ForeignKey(
-                        on_delete=django.db.models.deletion.CASCADE,
-                        to="contenttypes.contenttype",
+                        on_delete=django.db.models.deletion.CASCADE, to="leagues.league"
                     ),
                 ),
                 (
@@ -116,7 +82,30 @@ class Migration(migrations.Migration):
             },
         ),
         migrations.CreateModel(
-            name="Comment",
+            name="LeagueRound",
+            fields=[
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("name", models.CharField(max_length=100)),
+                (
+                    "league",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="rounds",
+                        to="leagues.league",
+                    ),
+                ),
+            ],
+        ),
+        migrations.CreateModel(
+            name="LeagueMatch",
             fields=[
                 (
                     "id",
@@ -128,40 +117,78 @@ class Migration(migrations.Migration):
                     ),
                 ),
                 (
-                    "created",
-                    model_utils.fields.AutoCreatedField(
-                        default=django.utils.timezone.now,
-                        editable=False,
-                        verbose_name="created",
-                    ),
-                ),
-                (
-                    "modified",
-                    model_utils.fields.AutoLastModifiedField(
-                        default=django.utils.timezone.now,
-                        editable=False,
-                        verbose_name="modified",
-                    ),
-                ),
-                ("object_id", models.PositiveIntegerField()),
-                ("content", models.TextField()),
-                (
-                    "content_type",
+                    "away",
                     models.ForeignKey(
                         on_delete=django.db.models.deletion.CASCADE,
-                        to="contenttypes.contenttype",
+                        related_name="away_league_matches",
+                        to="clubs.club",
                     ),
                 ),
                 (
-                    "user",
+                    "home",
                     models.ForeignKey(
                         on_delete=django.db.models.deletion.CASCADE,
-                        to=settings.AUTH_USER_MODEL,
+                        related_name="home_league_matches",
+                        to="clubs.club",
+                    ),
+                ),
+                (
+                    "match",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        to="matchmaking.match",
+                    ),
+                ),
+                (
+                    "round",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="matches",
+                        to="leagues.leagueround",
+                    ),
+                ),
+            ],
+        ),
+        migrations.CreateModel(
+            name="LeaguePosition",
+            fields=[
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("position", models.IntegerField()),
+                ("points", models.IntegerField()),
+                ("played", models.IntegerField()),
+                ("won", models.IntegerField()),
+                ("drawn", models.IntegerField()),
+                ("lost", models.IntegerField()),
+                ("goals_for", models.IntegerField()),
+                ("goals_against", models.IntegerField()),
+                ("goal_difference", models.IntegerField()),
+                (
+                    "club",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="league_positions",
+                        to="clubs.club",
+                    ),
+                ),
+                (
+                    "league",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="positions",
+                        to="leagues.league",
                     ),
                 ),
             ],
             options={
-                "abstract": False,
+                "unique_together": {("league", "club")},
             },
         ),
     ]

@@ -42,13 +42,24 @@ INSTALLED_APPS = [
     "django.contrib.messages",
     "django.contrib.staticfiles",
     "django.contrib.sites",
+    "django.contrib.gis",
     "rest_framework",
     "oauth2_provider",
     "social_django",
     "drf_social_oauth2",
     "corsheaders",
+    "model_utils",
+    "django_extensions",
     "accounts",
+    "assistant",
+    "clubs",
+    "leagues",
+    "matchmaking",
     "newsfeed",
+    "sports",
+    "sportsgrounds",
+    "tournaments",
+    "userprofile",
 ]
 
 MIDDLEWARE = [
@@ -147,7 +158,7 @@ LOGGING = {
 
 DATABASES = {
     "default": {
-        "ENGINE": "django.db.backends.postgresql",
+        "ENGINE": "django.contrib.gis.db.backends.postgis",
         "NAME": config("POSTGRES_NAME"),
         "USER": config("POSTGRES_USER"),
         "PASSWORD": config("POSTGRES_PASSWORD"),
@@ -236,3 +247,5 @@ LOGGING = {
         },
     },
 }
+
+GDAL_LIBRARY_PATH = config("GDAL_LIBRARY_PATH")

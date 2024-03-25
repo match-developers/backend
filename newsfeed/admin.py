@@ -1,8 +1,6 @@
 from django.contrib import admin
 
-from .models import Account
+from .models import Comment, CustomPost
 
-
-@admin.register(Account)
-class AccountAdmin(admin.ModelAdmin):
-    pass
+admin.site.register(CustomPost)
+admin.site.register(Comment)
