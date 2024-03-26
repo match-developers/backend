@@ -12,7 +12,7 @@ from leagues.models import (
 
 class LeagueFactory(factory.django.DjangoModelFactory):
     name = factory.Faker("name")
-    season = factory.Sequence("year")
+    season = factory.Sequence(lambda n: str(2000 + n))
 
     class Meta:
         model = League

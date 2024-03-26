@@ -1,12 +1,19 @@
+from django.contrib.gis.geos import Point
+
 import factory
 import factory.fuzzy
+from faker import Faker
 
 from sportsgrounds.models import SportGround, SportGroundGallery
+
+fake = Faker()
 
 
 class SportGroundFactory(factory.django.DjangoModelFactory):
     name = factory.Faker("word")
-    location = factory.Faker("point")
+    location = factory.LazyAttribute(
+        lambda _: Point(float(fake.longitude()), float(fake.latitude()))
+    )
     description = factory.Maybe(
         "should_have_description",
         yes_declaration=factory.Faker("text"),
