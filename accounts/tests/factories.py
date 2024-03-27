@@ -7,6 +7,7 @@ from accounts.models import Account
 class AccountFactory(factory.django.DjangoModelFactory):
     username = factory.Faker("user_name")
     email = factory.Sequence(lambda n: f"user{n}@example.com")
+    password = factory.PostGenerationMethodCall("set_password", "password")
     first_name = factory.Faker("first_name")
     last_name = factory.Faker("last_name")
     is_staff = False
