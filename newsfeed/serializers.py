@@ -1,31 +1,13 @@
-from django.contrib.contenttypes.models import ContentType
-
 from rest_framework import serializers
 from rest_framework.parsers import FormParser, MultiPartParser
 
-from .models import Comment, CustomPost, ImageAttachment, VideoAttachment
-
-
-class ImageAttachmentSerializer(serializers.ModelSerializer):
-    image = serializers.ImageField(use_url=True)
-
-    class Meta:
-        model = ImageAttachment
-        fields = ("image",)
-        extra_kwargs = {
-            "content_object": {"required": False},
-        }
-
-
-class VideoAttachmentSerializer(serializers.ModelSerializer):
-    video = serializers.FileField(use_url=True)
-
-    class Meta:
-        model = VideoAttachment
-        fields = ("video",)
-        extra_kwargs = {
-            "content_object": {"required": False},
-        }
+from .models import (
+    Comment,
+    CustomPost,
+    ImageAttachment,
+    TextAttachment,
+    VideoAttachment,
+)
 
 
 class CustomPostRetrieveSerializer(serializers.ModelSerializer):
@@ -47,6 +29,7 @@ class CustomPostRetrieveSerializer(serializers.ModelSerializer):
 class CustomPostCreateSerializer(serializers.ModelSerializer):
     image = serializers.ImageField(use_url=True, write_only=True, required=False)
     video = serializers.FileField(use_url=True, write_only=True, required=False)
+    text = serializers.CharField(write_only=True, required=False)
 
     class Meta:
         model = CustomPost
@@ -55,18 +38,30 @@ class CustomPostCreateSerializer(serializers.ModelSerializer):
             "title",
             "image",
             "video",
+            "text",
         )
 
     def validate(self, data):
-        if "image" in data and "video" in data:
+        image = data.get("image")
+        video = data.get("video")
+        text = data.get("text")
+
+        if (image and video) or (image and text) or (video and text):
             raise serializers.ValidationError(
-                "A post can have either an image or a video, but not both."
+                "A post can have either an image, a video, or text, but not multiple."
             )
+
+        if not (image or video or text):
+            raise serializers.ValidationError(
+                "A post must have either an image, a video, or text."
+            )
+
         return data
 
     def create(self, validated_data):
         image_file = validated_data.pop("image", None)
         video_file = validated_data.pop("video", None)
+        text = validated_data.pop("text", None)
 
         custom_post = CustomPost.objects.create(**validated_data)
 
@@ -74,6 +69,8 @@ class CustomPostCreateSerializer(serializers.ModelSerializer):
             ImageAttachment.objects.create(content_object=custom_post, image=image_file)
         elif video_file is not None:
             VideoAttachment.objects.create(content_object=custom_post, video=video_file)
+        elif text is not None:
+            TextAttachment.objects.create(content_object=custom_post, text=text)
 
         return custom_post
 

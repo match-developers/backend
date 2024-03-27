@@ -1,7 +1,5 @@
 import io
-from base64 import b64encode
 
-from django.contrib.contenttypes.models import ContentType
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import TestCase
 from django.urls import reverse
@@ -11,7 +9,7 @@ from rest_framework import status
 from rest_framework.test import APIClient
 
 from accounts.tests.factories import AccountFactory
-from newsfeed.models import CustomPost, ImageAttachment
+from newsfeed.models import CustomPost, ImageAttachment, TextAttachment, VideoAttachment
 
 
 class CustomPostCreateTestCase(TestCase):
@@ -48,3 +46,49 @@ class CustomPostCreateTestCase(TestCase):
 
         # Verify that an ImageAttachment object is associated with the CustomPost
         self.assertTrue(custom_post.images.exists())
+
+    def test_create_custom_post_with_video_att_then_success(self):
+        # Create a temporary video file
+        video = io.BytesIO(b"test video")
+        video.name = "test.mp4"
+        video.seek(0)
+
+        # Create the data dictionary
+        data = {"user": self.user.id, "title": "Test Post", "video": video}
+
+        # Send the POST request
+        response = self.client.post(self.create_url, data, format="multipart")
+
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(response.data["title"], "Test Post")
+        self.assertEqual(response.data["user"], self.user.id)
+
+        # Verify that a VideoAttachment object was created
+        self.assertTrue(VideoAttachment.objects.exists())
+
+        # Retrieve the created CustomPost object
+        custom_post = CustomPost.objects.get(title="Test Post")
+
+        # Verify that a VideoAttachment object is associated with the CustomPost
+        self.assertTrue(custom_post.videos.exists())
+
+    def test_create_custom_post_with_text_att_then_success(self):
+        # Create the data dictionary
+        data = {
+            "user": self.user.id,
+            "title": "Test Post",
+            "text": "This is a test post.",
+        }
+
+        # Send the POST request
+        response = self.client.post(self.create_url, data)
+
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(response.data["title"], "Test Post")
+        self.assertEqual(response.data["user"], self.user.id)
+
+        self.assertTrue(TextAttachment.objects.exists())
+
+        custom_post = CustomPost.objects.get(title="Test Post")
+
+        self.assertTrue(custom_post.texts.exists())
