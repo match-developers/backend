@@ -51,4 +51,4 @@ class VideoAttachment(models.Model):
 
 
 class TextAttachment(models.Model):
-    text = models.TextField()
+    text = models.TextField(max_length=200)
