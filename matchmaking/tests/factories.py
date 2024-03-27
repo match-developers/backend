@@ -3,6 +3,7 @@ import factory.fuzzy
 
 from matchmaking.choices import MATCH_TYPES, STATUS_CHOICES
 from matchmaking.models import Goal, Match, MatchParticipant, MatchPost, MatchScore
+from sports.choices import SPORT_CHOICES
 
 
 class MatchParticipantFactory(factory.django.DjangoModelFactory):
@@ -33,7 +34,7 @@ class MatchFactory(factory.django.DjangoModelFactory):
     sports_ground = factory.SubFactory(
         "sportsgrounds.tests.factories.SportGroundFactory"
     )
-    sport = factory.Faker("word")
+    sport = factory.fuzzy.FuzzyChoice([x[0] for x in SPORT_CHOICES])
     creator = factory.SubFactory("accounts.tests.factories.AccountFactory")
     start_time = factory.Faker("date_time")
     duration = factory.Faker("time_delta")
@@ -53,12 +54,6 @@ class MatchFactory(factory.django.DjangoModelFactory):
     )
     status = factory.fuzzy.FuzzyChoice([x[0] for x in STATUS_CHOICES])
     match_type = factory.fuzzy.FuzzyChoice([x[0] for x in MATCH_TYPES])
-
-    participants = factory.RelatedFactoryList(
-        MatchParticipantFactory,
-        factory_related_name="matches",
-        size=2,
-    )
 
     class Meta:
         model = Match

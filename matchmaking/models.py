@@ -83,7 +83,7 @@ class Match(TimeStampedModel):
         super().save(*args, **kwargs)
 
     def __str__(self):
-        return f"{self.home} vs {self.away}"
+        return f"{self.home} vs {self.away} - {self.match_type} match at {self.sports_ground}"
 
 
 class MatchScore(TimeStampedModel):

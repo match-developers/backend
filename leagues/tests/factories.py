@@ -28,8 +28,6 @@ class LeagueRoundFactory(factory.django.DjangoModelFactory):
 
 class LeagueMatchFactory(factory.django.DjangoModelFactory):
     round = factory.SubFactory(LeagueRoundFactory)
-    home = factory.SubFactory("clubs.tests.factories.ClubFactory")
-    away = factory.SubFactory("clubs.tests.factories.ClubFactory")
     match = factory.SubFactory(
         "matchmaking.tests.factories.MatchFactory", match_type="league"
     )

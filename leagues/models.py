@@ -12,6 +12,7 @@ from newsfeed.models import Comment, Like
 class League(models.Model):
     name = models.CharField(max_length=100)
     season = models.CharField(max_length=100)
+    clubs = models.ManyToManyField(Club, related_name="leagues")
 
     def __str__(self):
         return f"{self.name} - {self.season}"
@@ -29,16 +30,10 @@ class LeagueMatch(models.Model):
     round = models.ForeignKey(
         LeagueRound, related_name="matches", on_delete=models.CASCADE
     )
-    home = models.ForeignKey(
-        Club, related_name="home_league_matches", on_delete=models.CASCADE
-    )
-    away = models.ForeignKey(
-        Club, related_name="away_league_matches", on_delete=models.CASCADE
-    )
     match = models.ForeignKey(Match, on_delete=models.CASCADE)
 
     def __str__(self):
-        return f"{self.home} vs {self.away}"
+        return f"{self.round} - {self.match}"
 
 
 class LeaguePosition(models.Model):
