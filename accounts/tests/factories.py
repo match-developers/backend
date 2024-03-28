@@ -10,6 +10,11 @@ class AccountFactory(factory.django.DjangoModelFactory):
     password = factory.PostGenerationMethodCall("set_password", "password")
     first_name = factory.Faker("first_name")
     last_name = factory.Faker("last_name")
+    following = factory.RelatedFactoryList(
+        "accounts.tests.factories.AccountFactory",
+        factory_related_name="followers",
+        size=5,
+    )
     is_staff = False
     is_active = True
 
