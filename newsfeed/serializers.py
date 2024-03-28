@@ -1,8 +1,14 @@
 import imghdr
 import os
 
+from django.contrib.contenttypes.models import ContentType
+from django.core.exceptions import ObjectDoesNotExist
+
 from rest_framework import serializers
 from rest_framework.parsers import FormParser, MultiPartParser
+
+from matchmaking.models import MatchPost
+from matchmaking.serializers import MatchPostSerializer
 
 from .models import (
     Comment,
@@ -33,31 +39,42 @@ class CustomPostCreateSerializer(serializers.ModelSerializer):
     image = serializers.ImageField(use_url=True, write_only=True, required=False)
     video = serializers.FileField(use_url=True, write_only=True, required=False)
     text = serializers.CharField(write_only=True, required=False)
+    content_type = serializers.SlugRelatedField(
+        queryset=ContentType.objects.all(), slug_field="model", required=False
+    )
+    object_id = serializers.IntegerField(required=False)
+    content_object = serializers.SerializerMethodField()
 
     class Meta:
         model = CustomPost
         fields = (
+            "id",
             "user",
             "title",
             "image",
             "video",
             "text",
+            "content_type",
+            "object_id",
+            "content_object",
         )
 
     def validate(self, data):
         image = data.get("image")
         video = data.get("video")
         text = data.get("text")
+        content_type = data.get("content_type")
 
-        if (image and video) or (image and text) or (video and text):
-            raise serializers.ValidationError(
-                "A post can have either an image, a video, or text, but not multiple."
-            )
+        if not content_type:
+            if (image and video) or (image and text) or (video and text):
+                raise serializers.ValidationError(
+                    "A post can have either an image, a video, or text, but not multiple."
+                )
 
-        if not (image or video or text):
-            raise serializers.ValidationError(
-                "A post must have either an image, a video, or text."
-            )
+            if not (image or video or text):
+                raise serializers.ValidationError(
+                    "A post must have either an image, a video, or text."
+                )
         return data
 
     def validate_image(self, value):
@@ -99,6 +116,8 @@ class CustomPostCreateSerializer(serializers.ModelSerializer):
         image_file = validated_data.pop("image", None)
         video_file = validated_data.pop("video", None)
         text = validated_data.pop("text", None)
+        content_type = validated_data.pop("content_type", None)
+        object_id = validated_data.pop("object_id", None)
 
         custom_post = CustomPost.objects.create(**validated_data)
 
@@ -109,7 +128,33 @@ class CustomPostCreateSerializer(serializers.ModelSerializer):
         elif text is not None:
             TextAttachment.objects.create(content_object=custom_post, text=text)
 
+        if content_type and object_id:
+            # Get the ContentType object for the given content_type
+            try:
+                content_type_obj = ContentType.objects.get(model=content_type.model)
+            except ContentType.DoesNotExist:
+                raise serializers.ValidationError(
+                    "Invalid content type. No model matches the given content type."
+                )
+
+            # Retrieve the MatchPost
+            try:
+                match_post = content_type_obj.get_object_for_this_type(pk=object_id)
+            except ObjectDoesNotExist:
+                raise serializers.ValidationError(
+                    "The referenced object does not exist."
+                )
+
+            # Associate the MatchPost with the CustomPost
+            custom_post.content_type = content_type_obj
+            custom_post.object_id = match_post.id
+            custom_post.save()
         return custom_post
+
+    def get_content_object(self, obj):
+        if isinstance(obj.content_object, MatchPost):
+            return MatchPostSerializer(obj.content_object).data
+        return None
 
     def get_serializer_context(self):
         context = super().get_serializer_context()
