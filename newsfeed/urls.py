@@ -4,7 +4,7 @@ from .views import CustomPostViewSet, LikeCommentView, UnlikeCommentView
 
 urlpatterns = [
     path(
-        "custom_posts/",
+        "custom_posts",
         CustomPostViewSet.as_view({"get": "list", "post": "create"}),
         name="custom_posts",
     ),
