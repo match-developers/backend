@@ -12,7 +12,7 @@ from accounts.tests.factories import AccountFactory
 from newsfeed.models import CustomPost, ImageAttachment, TextAttachment, VideoAttachment
 
 
-class CustomPostCreateTestCase(TestCase):
+class CustomPostCreateWithContentTestCase(TestCase):
     def setUp(self):
         self.client = APIClient()
         self.user = AccountFactory()
@@ -29,14 +29,13 @@ class CustomPostCreateTestCase(TestCase):
         image = SimpleUploadedFile(file.name, file.read(), content_type="image/png")
 
         # Create the data dictionary
-        data = {"user": self.user.id, "title": "Test Post", "image": image}
+        data = {"title": "Test Post", "image": image}
 
         # Send the POST request
         response = self.client.post(self.create_url, data, format="multipart")
 
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertEqual(response.data["title"], "Test Post")
-        self.assertEqual(response.data["user"], self.user.id)
 
         # Verify that an ImageAttachment object was created
         self.assertTrue(ImageAttachment.objects.exists())
@@ -44,6 +43,8 @@ class CustomPostCreateTestCase(TestCase):
         # Retrieve the created CustomPost object
         custom_post = CustomPost.objects.get(title="Test Post")
 
+        # Verify that the CustomPost object was created by the authenticated user
+        self.assertEqual(custom_post.user, self.user)
         # Verify that an ImageAttachment object is associated with the CustomPost
         self.assertTrue(custom_post.images.exists())
 
@@ -54,14 +55,13 @@ class CustomPostCreateTestCase(TestCase):
         video.seek(0)
 
         # Create the data dictionary
-        data = {"user": self.user.id, "title": "Test Post", "video": video}
+        data = {"title": "Test Post", "video": video}
 
         # Send the POST request
         response = self.client.post(self.create_url, data, format="multipart")
 
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertEqual(response.data["title"], "Test Post")
-        self.assertEqual(response.data["user"], self.user.id)
 
         # Verify that a VideoAttachment object was created
         self.assertTrue(VideoAttachment.objects.exists())
@@ -69,13 +69,14 @@ class CustomPostCreateTestCase(TestCase):
         # Retrieve the created CustomPost object
         custom_post = CustomPost.objects.get(title="Test Post")
 
+        # Verify that the CustomPost object was created by the authenticated user
+        self.assertEqual(custom_post.user, self.user)
         # Verify that a VideoAttachment object is associated with the CustomPost
         self.assertTrue(custom_post.videos.exists())
 
     def test_create_custom_post_with_text_att_then_success(self):
         # Create the data dictionary
         data = {
-            "user": self.user.id,
             "title": "Test Post",
             "text": "This is a test post.",
         }
@@ -85,12 +86,14 @@ class CustomPostCreateTestCase(TestCase):
 
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertEqual(response.data["title"], "Test Post")
-        self.assertEqual(response.data["user"], self.user.id)
 
         self.assertTrue(TextAttachment.objects.exists())
 
         custom_post = CustomPost.objects.get(title="Test Post")
 
+        # Verify that the CustomPost object was created by the authenticated user
+        self.assertEqual(custom_post.user, self.user)
+        # Verify that a TextAttachment object is associated with the CustomPost
         self.assertTrue(custom_post.texts.exists())
 
     def test_create_custom_post_with_image_and_video_then_fail(self):
@@ -109,7 +112,6 @@ class CustomPostCreateTestCase(TestCase):
 
         # Create the data dictionary
         data = {
-            "user": self.user.id,
             "title": "Test Post",
             "image": image,
             "video": video,
@@ -135,7 +137,6 @@ class CustomPostCreateTestCase(TestCase):
 
         # Create the data dictionary
         data = {
-            "user": self.user.id,
             "title": "Test Post",
             "image": image,
             "text": "This is a test post.",
@@ -158,7 +159,6 @@ class CustomPostCreateTestCase(TestCase):
 
         # Create the data dictionary
         data = {
-            "user": self.user.id,
             "title": "Test Post",
             "video": video,
             "text": "This is a test post.",
@@ -175,7 +175,7 @@ class CustomPostCreateTestCase(TestCase):
 
     def test_create_custom_post_without_image_video_text_then_fail(self):
         # Create the data dictionary
-        data = {"user": self.user.id, "title": "Test Post"}
+        data = {"title": "Test Post"}
 
         # Send the POST request
         response = self.client.post(self.create_url, data)
@@ -188,7 +188,7 @@ class CustomPostCreateTestCase(TestCase):
 
     def test_create_custom_post_without_title_then_fail(self):
         # Create the data dictionary
-        data = {"user": self.user.id}
+        data = {}
 
         # Send the POST request
         response = self.client.post(self.create_url, data)
@@ -199,35 +199,9 @@ class CustomPostCreateTestCase(TestCase):
             "This field is required.",
         )
 
-    def test_create_custom_post_without_user_then_fail(self):
-        # Create the data dictionary
-        data = {"title": "Test Post"}
-
-        # Send the POST request
-        response = self.client.post(self.create_url, data)
-
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertEqual(
-            response.data["user"][0],
-            "This field is required.",
-        )
-
-    def test_create_custom_post_with_invalid_user_then_fail(self):
-        # Create the data dictionary
-        data = {"user": 999, "title": "Test Post"}
-
-        # Send the POST request
-        response = self.client.post(self.create_url, data)
-
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertEqual(
-            response.data["user"][0],
-            'Invalid pk "999" - object does not exist.',
-        )
-
     def test_create_custom_post_with_invalid_image_then_fail(self):
         # Create the data dictionary
-        data = {"user": self.user.id, "title": "Test Post", "image": "invalid"}
+        data = {"title": "Test Post", "image": "invalid"}
 
         # Send the POST request
         response = self.client.post(self.create_url, data, format="multipart")
@@ -240,7 +214,7 @@ class CustomPostCreateTestCase(TestCase):
 
     def test_create_custom_post_with_invalid_video_then_fail(self):
         # Create the data dictionary
-        data = {"user": self.user.id, "title": "Test Post", "video": "invalid"}
+        data = {"title": "Test Post", "video": "invalid"}
 
         # Send the POST request
         response = self.client.post(self.create_url, data, format="multipart")
@@ -261,7 +235,7 @@ class CustomPostCreateTestCase(TestCase):
         image = SimpleUploadedFile(file.name, file.read(), content_type="image/png")
 
         # Create the data dictionary
-        data = {"user": self.user.id, "title": "Test Post", "image": image}
+        data = {"title": "Test Post", "image": image}
 
         # Send the POST request
         response = self.client.post(self.create_url, data, format="multipart")
@@ -279,7 +253,7 @@ class CustomPostCreateTestCase(TestCase):
         video.seek(0)
 
         # Create the data dictionary
-        data = {"user": self.user.id, "title": "Test Post", "video": video}
+        data = {"title": "Test Post", "video": video}
 
         # Send the POST request
         response = self.client.post(self.create_url, data, format="multipart")

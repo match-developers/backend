@@ -13,7 +13,7 @@ class AccountFactory(factory.django.DjangoModelFactory):
     following = factory.RelatedFactoryList(
         "accounts.tests.factories.AccountFactory",
         factory_related_name="followers",
-        size=5,
+        size=0,
     )
     is_staff = False
     is_active = True

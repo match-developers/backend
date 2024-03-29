@@ -36,6 +36,7 @@ class CustomPostRetrieveSerializer(serializers.ModelSerializer):
 
 
 class CustomPostCreateSerializer(serializers.ModelSerializer):
+    user = serializers.HiddenField(default=serializers.CurrentUserDefault())
     image = serializers.ImageField(use_url=True, write_only=True, required=False)
     video = serializers.FileField(use_url=True, write_only=True, required=False)
     text = serializers.CharField(write_only=True, required=False)

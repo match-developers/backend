@@ -11,7 +11,7 @@ from matchmaking.tests.factories import MatchFactory, MatchPostFactory
 from newsfeed.models import CustomPost
 
 
-class CustomPostCreateTestCase(TestCase):
+class CustomPostCreateWithOtherPostsTestCase(TestCase):
     def setUp(self):
         self.client = APIClient()
         self.user = AccountFactory()
@@ -30,7 +30,6 @@ class CustomPostCreateTestCase(TestCase):
         response = self.client.post(
             self.create_url,
             {
-                "user": self.user.id,
                 "title": "Custom post with match post",
                 "content_type": "matchpost",
                 "object_id": match_post.id,
