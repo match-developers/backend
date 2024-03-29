@@ -38,6 +38,10 @@ class Account(AbstractBaseUser, PermissionsMixin):
     is_staff = models.BooleanField(default=False)
     is_active = models.BooleanField(default=True)
 
+    following = models.ManyToManyField(
+        "self", related_name="followers", symmetrical=False
+    )
+
     objects = CustomAccountManager()
 
     USERNAME_FIELD = "email"

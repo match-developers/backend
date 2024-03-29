@@ -1,7 +1,7 @@
 from django.db import models
 
-from clubs.models import Club
 from matchmaking.models import Match
+from tournaments.choices import TOURNAMENT_STAGE_TYPES
 
 
 class Tournament(models.Model):
@@ -12,14 +12,6 @@ class Tournament(models.Model):
 
 
 class Stage(models.Model):
-    TOURNAMENT_STAGE_TYPES = (
-        ("group", "Group Stage"),
-        ("round_of_16", "Round of 16"),
-        ("quarter_final", "Quarter-final"),
-        ("semi_final", "Semi-final"),
-        ("final", "Final"),
-        ("other", "Other"),
-    )
     tournament = models.ForeignKey(
         Tournament, related_name="stages", on_delete=models.CASCADE
     )
@@ -33,12 +25,6 @@ class Stage(models.Model):
 class TournamentMatch(models.Model):
     stage = models.ForeignKey(Stage, related_name="matches", on_delete=models.CASCADE)
     match = models.ForeignKey(Match, on_delete=models.CASCADE)
-    home = models.ForeignKey(
-        Club, related_name="home_tournament_matches", on_delete=models.CASCADE
-    )
-    away = models.ForeignKey(
-        Club, related_name="away_tournament_matches", on_delete=models.CASCADE
-    )
 
     def __str__(self):
-        return f"{self.home} vs {self.away}"
+        return f"{self.stage} - {self.match}"

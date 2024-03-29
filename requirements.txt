@@ -63,6 +63,10 @@ drf-social-oauth2==2.1.3
     # via -r requirements.in
 ecdsa==0.18.0
     # via python-jose
+factory-boy==3.3.0
+    # via -r requirements.in
+faker==24.3.0
+    # via factory-boy
 filelock==3.13.1
     # via virtualenv
 flake8==7.0.0
@@ -116,6 +120,8 @@ pyjwt==2.8.0
     # via social-auth-core
 pyproj==3.6.1
     # via -r requirements.in
+python-dateutil==2.9.0.post0
+    # via faker
 python-decouple==3.8
     # via -r requirements.in
 python-jose[cryptography]==3.3.0
@@ -136,7 +142,9 @@ requests-oauthlib==1.3.1
 rsa==4.9
     # via python-jose
 six==1.16.0
-    # via ecdsa
+    # via
+    #   ecdsa
+    #   python-dateutil
 social-auth-app-django==5.4.0
     # via drf-social-oauth2
 social-auth-core==4.5.1
