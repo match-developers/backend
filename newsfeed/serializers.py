@@ -19,20 +19,50 @@ from .models import (
 )
 
 
+class ImageSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ImageAttachment
+        fields = ("id", "image")
+
+
+class VideoSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = VideoAttachment
+        fields = ("id", "video")
+
+
+class TextSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = TextAttachment
+        fields = ("id", "text")
+
+
 class CustomPostRetrieveSerializer(serializers.ModelSerializer):
     likes = serializers.IntegerField(source="likes.count")
+    images = ImageSerializer(many=True, read_only=True)
+    videos = VideoSerializer(many=True, read_only=True)
+    texts = TextSerializer(many=True, read_only=True)
+    content_object = serializers.SerializerMethodField()
+
+    def get_content_object(self, obj):
+        if isinstance(obj.content_object, MatchPost):
+            return MatchPostSerializer(obj.content_object).data
+        return None
 
     class Meta:
         model = CustomPost
         fields = (
-            "title",
+            "id",
             "user",
+            "title",
+            "images",
+            "videos",
+            "texts",
             "likes",
             "content_type",
             "object_id",
             "content_object",
         )
-        depth = 1
 
 
 class CustomPostCreateSerializer(serializers.ModelSerializer):

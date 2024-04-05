@@ -11,8 +11,10 @@ from .serializers import CustomPostCreateSerializer, CustomPostRetrieveSerialize
 
 
 class CustomPostViewSet(ModelViewSet):
-    queryset = CustomPost.objects.all()
     permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        return CustomPost.objects.filter(user=self.request.user)
 
     def get_serializer_class(self):
         if self.action == "create":
