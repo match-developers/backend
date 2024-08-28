@@ -35,7 +35,7 @@ deprecated==1.2.14
     # via jwcrypto
 distlib==0.3.8
     # via virtualenv
-django==4.2.3
+django==4.2.13
     # via
     #   -r requirements.in
     #   django-cors-headers
@@ -160,3 +160,5 @@ wrapt==1.16.0
 
 # The following packages are considered to be unsafe in a requirements file:
 # setuptools
+
+

@@ -11,9 +11,7 @@ https://docs.djangoproject.com/en/4.2/ref/settings/
 """
 
 from pathlib import Path
-
 from decouple import config
-
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -21,11 +19,10 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/4.2/howto/deployment/checklist/
 
-# SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = config("SECRET_KEY")
 
+SECRET_KEY = config('django-insecure-*tib0+!lbhyr968ktuu1hq+b)75m)yc*&)bvu74&^-l!*oq-6z', default='')
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = config("DEBUG")
+DEBUG = config("DEBUG", default=False, cast=bool)
 
 ALLOWED_HOSTS = config(
     "ALLOWED_HOSTS", cast=lambda v: [s.strip() for s in v.split(",")]
@@ -249,4 +246,4 @@ LOGGING = {
     },
 }
 
-GDAL_LIBRARY_PATH = config("GDAL_LIBRARY_PATH")
+GDAL_LIBRARY_PATH = '/usr/local/opt/gdal/lib/libgdal.dylib'
