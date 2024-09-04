@@ -8,17 +8,12 @@ from accounts.models import Account
 from clubs.models import Club
 from matchmaking.choices import MATCH_TYPES, STATUS_CHOICES
 from newsfeed.models import Comment, Like
-from sports.choices import SPORT_CHOICES
-from sports.models import SportPosition
 from sportsgrounds.models import SportGround
 
 
 class MatchParticipant(models.Model):
     player = models.ForeignKey(Account, on_delete=models.CASCADE)
     club = models.ForeignKey(Club, null=True, blank=True, on_delete=models.CASCADE)
-    position = models.ForeignKey(
-        SportPosition, null=True, blank=True, on_delete=models.CASCADE
-    )
     is_home_team = models.BooleanField(default=True)
 
     def __str__(self):
@@ -27,7 +22,6 @@ class MatchParticipant(models.Model):
 
 class Match(TimeStampedModel):
     sports_ground = models.ForeignKey(SportGround, on_delete=models.CASCADE)
-    sport = models.CharField(max_length=20, choices=SPORT_CHOICES)
     creator = models.ForeignKey(Account, on_delete=models.CASCADE)
     start_time = models.DateTimeField()
     duration = models.DurationField()
