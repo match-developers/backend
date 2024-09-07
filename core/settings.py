@@ -48,16 +48,12 @@ INSTALLED_APPS = [
     "model_utils",
     "django_extensions",
     "accounts",
-    "assistant",
     "clubs",
     "leagues",
     "matchmaking",
     "newsfeed",
-    "sports",
     "sportsgrounds",
     "tournaments",
-    "userprofile",
-    "rankings",
 ]
 
 MIDDLEWARE = [
