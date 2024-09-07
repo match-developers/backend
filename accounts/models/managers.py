@@ -8,18 +8,18 @@ from django.utils.translation import gettext_lazy as _
 
 
 class CustomUserManager(BaseUserManager):
-    def create_user(self, email, username, first_name, password, last_name, **other_fields):
+    def create_user(self, email, username, first_name, last_name, password, profile_photo=None, bio=None, **other_fields):
         if not email:
             raise ValueError(_("Please provide an email address"))
         email = self.normalize_email(email)
         user = self.model(
-            email=email, username=username, first_name=first_name, last_name=last_name, **other_fields
+            email=email, username=username, first_name=first_name, last_name=last_name, profile_photo=profile_photo, bio=bio, **other_fields
         )
         user.set_password(password)
         user.save()
         return user
 
-    def create_superuser(self, email, username, first_name, last_name, password, **other_fields):
+    def create_superuser(self, email, username, first_name, last_name, password, profile_photo=None, bio=None, **other_fields):
         other_fields.setdefault("is_staff", True)
         other_fields.setdefault("is_superuser", True)
         other_fields.setdefault("is_active", True)
@@ -27,4 +27,4 @@ class CustomUserManager(BaseUserManager):
             raise ValueError(_("Please assign is_staff=True for superuser"))
         if other_fields.get("is_superuser") is not True:
             raise ValueError(_("Please assign is_superuser=True for superuser"))
-        return self.create_user(email, username, first_name, last_name, password, **other_fields)
+        return self.create_user(email, username, first_name, last_name, password, profile_photo=profile_photo, bio=bio, **other_fields)
