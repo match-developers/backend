@@ -1,11 +1,10 @@
+# accounts/urls.py
+
 from django.urls import path
-
-from .views import AllUsers, CreateAccount, CurrentUser
-
-app_name = "users"
+from .views import RegisterView, LoginView, SocialLoginView
 
 urlpatterns = [
-    path("create/", CreateAccount.as_view(), name="create_user"),
-    path("all/", AllUsers.as_view(), name="all"),
-    path("current-user/", CurrentUser.as_view(), name="current"),
+    path('register/', RegisterView.as_view(), name='register'),
+    path('login/', LoginView.as_view(), name='login'),
+    path('social-login/', SocialLoginView.as_view(), name='social_login'),
 ]

@@ -21,7 +21,11 @@ class User(AbstractBaseUser, PermissionsMixin):
     bio = models.TextField(null=True, blank=True)
     is_staff = models.BooleanField(default=False)
     is_active = models.BooleanField(default=True)
-
+    # 소셜 로그인 관련 필드
+    provider = models.CharField(max_length=50, null=True, blank=True)  # 소셜 로그인 제공자 (Google, Facebook 등)
+    social_id = models.CharField(max_length=255, null=True, blank=True)  # 소셜 계정 ID
+    is_email_verified = models.BooleanField(default=False)  # 이메일 인증 여부
+    
     following = models.ManyToManyField(
         "self", related_name="followers", symmetrical=False
     )

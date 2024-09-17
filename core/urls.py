@@ -15,15 +15,12 @@ Including another URLconf
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
 
-from django.conf import settings
-from django.conf.urls.static import static
+# core/urls.py
+
 from django.contrib import admin
-from django.urls import include, path
+from django.urls import path, include
 
 urlpatterns = [
-    path("admin/", admin.site.urls),
-    path("api-auth/", include("rest_framework.urls")),
-    path("api-auth/", include("drf_social_oauth2.urls", namespace="drf")),
-    path("api-auth/", include("accounts.urls")),
-    path("newsfeed/", include("newsfeed.urls")),
-] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+    path('admin/', admin.site.urls),
+    path('api/accounts/', include('accounts.urls')),  # accounts 앱의 url 연결
+]
