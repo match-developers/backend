@@ -22,25 +22,45 @@ STATUS_CHOICES = [
 
 
 class Match(TimeStampedModel):
-    sports_ground = models.ForeignKey(SportsGround, on_delete=models.CASCADE)  # 경기장
-    facility = models.ForeignKey(Facilities, on_delete=models.CASCADE)  # 경기장 내 시설
-    price = models.DecimalField(max_digits=10, decimal_places=2)  # 매치 비용
-    creator = models.ForeignKey(User, on_delete=models.CASCADE)  # 매치 생성자 (user)
-    start_time = models.DateTimeField()  # 경기 시작 시간
-    duration = models.DurationField()  # 경기 시간
-    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default="scheduled")  # 매치 상태
+    sports_ground = models.ForeignKey(SportsGround, on_delete=models.CASCADE)
+    facility = models.ForeignKey(Facilities, on_delete=models.CASCADE)
+    price = models.DecimalField(max_digits=10, decimal_places=2)
+    creator = models.ForeignKey(User, on_delete=models.CASCADE)
+    start_time = models.DateTimeField()
+    duration = models.DurationField()
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default="scheduled")
     match_type = models.CharField(max_length=50, choices=[("single", "Single"), ("league", "League"), ("tournament", "Tournament")], default="single")
-    league = models.ForeignKey(League, on_delete=models.SET_NULL, null=True, blank=True)  # 리그
-    tournament = models.ForeignKey(Tournament, on_delete=models.SET_NULL, null=True, blank=True)  # 토너먼트
-    total_spots = models.IntegerField()  # 총 참가 인원
-    participants = models.ManyToManyField(TeamPlayer, related_name="matches", blank=True)  # 참가자들 (팀 또는 플레이어)
+    league = models.ForeignKey(League, on_delete=models.SET_NULL, null=True, blank=True)
+    tournament = models.ForeignKey(Tournament, on_delete=models.SET_NULL, null=True, blank=True)
+    total_spots = models.IntegerField()
+    participants = models.ManyToManyField(TeamPlayer, related_name="matches", blank=True)
     referees = models.ManyToManyField(User, related_name="refereed_matches", blank=True)
     spectators = models.ManyToManyField(User, related_name="spectated_matches", blank=True)
-    winning_method = models.ForeignKey('WinningMethod', on_delete=models.CASCADE, null=True, blank=True)  # 승리 조건
+    winning_method = models.ForeignKey('WinningMethod', on_delete=models.CASCADE, null=True, blank=True)
 
     @property
     def available_spots(self):
         return self.total_spots - self.participants.count()
+
+    @classmethod
+    def create_match(cls, creator, sports_ground, facility, price, start_time, duration, match_type, total_spots, league=None, tournament=None, winning_method=None):
+        """
+        매치 생성 메서드
+        """
+        match = cls.objects.create(
+            creator=creator,
+            sports_ground=sports_ground,
+            facility=facility,
+            price=price,
+            start_time=start_time,
+            duration=duration,
+            match_type=match_type,
+            total_spots=total_spots,
+            league=league,
+            tournament=tournament,
+            winning_method=winning_method
+        )
+        return match
 
     def __str__(self):
         return f"{self.creator} created {self.match_type} match at {self.sports_ground}"

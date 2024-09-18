@@ -19,7 +19,7 @@ class User(AbstractBaseUser, PermissionsMixin):
     last_name = models.CharField(_("last Name"), max_length=150)
     profile_photo = models.ImageField(upload_to='profile_photos/', null=True, blank=True)
     bio = models.TextField(null=True, blank=True)
-    is_staff = models.BooleanField(default=False)
+    is_owner = models.BooleanField(default=False)
     is_active = models.BooleanField(default=True)
     # 소셜 로그인 관련 필드
     provider = models.CharField(max_length=50, null=True, blank=True)  # 소셜 로그인 제공자 (Google, Facebook 등)

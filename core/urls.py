@@ -19,8 +19,11 @@ Including another URLconf
 
 from django.contrib import admin
 from django.urls import path, include
+from matchmaking.views import MatchCreateView, MatchUpdateView
 
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('api/accounts/', include('accounts.urls')),  # accounts 앱의 url 연결
+    path('matches/create/', MatchCreateView.as_view(), name='create-match'),  # 매치 생성
+    path('matches/update/<int:match_id>/', MatchUpdateView.as_view(), name='update-match'),  # 매치 수정
 ]

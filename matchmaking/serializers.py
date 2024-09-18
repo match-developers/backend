@@ -1,49 +1,35 @@
 from rest_framework import serializers
+from .models import Match
 
-from .models import Match, MatchPost, MatchScore
-
-
-class MatchScoreSerializer(serializers.ModelSerializer):
-
-    class Meta:
-        model = MatchScore
-        fields = [
-            "home_score",
-            "away_score",
-        ]
-
-
-class MatchPostContentSerializer(serializers.ModelSerializer):
-    score = serializers.SerializerMethodField()
-
+class MatchSerializer(serializers.ModelSerializer):
     class Meta:
         model = Match
-        fields = [
-            "sports_ground",
-            "sport",
-            "score",
-            "creator",
-            "start_time",
-            "duration",
-            "is_public",
-            "is_club",
-            "average_level",
-            "home",
-            "away",
-            "status",
-            "match_type",
-            "participants",
-        ]
+        fields = ['sports_ground', 'facility', 'price', 'start_time', 'duration', 'match_type', 'total_spots', 'league', 'tournament', 'winning_method']
 
-    def get_score(self, obj):
-        if obj.score:
-            return MatchScoreSerializer(obj.score).data
-        return None
+    def create(self, validated_data):
+        """
+        매치 생성 로직을 처리하는 메소드
+        """
+        return Match.objects.create(**validated_data)
 
 
-class MatchPostSerializer(serializers.ModelSerializer):
-    likes = serializers.IntegerField(source="likes.count")
-
+class MatchUpdateSerializer(serializers.ModelSerializer):
     class Meta:
-        model = MatchPost
-        fields = ("title", "user", "likes", "match")
+        model = Match
+        fields = ['sports_ground', 'facility', 'price', 'start_time', 'duration', 'total_spots', 'status', 'match_type']
+
+    def update(self, instance, validated_data):
+        """
+        매치 수정 로직을 처리하는 메소드
+        """
+        instance.sports_ground = validated_data.get('sports_ground', instance.sports_ground)
+        instance.facility = validated_data.get('facility', instance.facility)
+        instance.price = validated_data.get('price', instance.price)
+        instance.start_time = validated_data.get('start_time', instance.start_time)
+        instance.duration = validated_data.get('duration', instance.duration)
+        instance.total_spots = validated_data.get('total_spots', instance.total_spots)
+        instance.status = validated_data.get('status', instance.status)
+        instance.match_type = validated_data.get('match_type', instance.match_type)
+        
+        instance.save()
+        return instance
