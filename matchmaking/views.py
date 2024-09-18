@@ -1,3 +1,4 @@
+from django.utils import timezone
 from django.forms import ValidationError
 from rest_framework import status
 from rest_framework.response import Response
@@ -5,7 +6,7 @@ from rest_framework.views import APIView
 from rest_framework.permissions import IsAuthenticated
 from .models.match import Match, MatchEvent, TeamPlayer
 from .models.team import TeamPlayer
-from .serializers import MatchSerializer, MatchEventSerializer
+from .serializers import MatchSerializer, MatchEventSerializer, TeamPlayerSerializer
 from accounts.models.users import User
 
 class MatchCreateView(APIView):
@@ -26,12 +27,23 @@ class MatchDetailView(APIView):
 
     def get(self, request, match_id, *args, **kwargs):
         try:
-            match = Match.objects.prefetch_related('events').get(id=match_id)
+            match = Match.objects.get(id=match_id)
         except Match.DoesNotExist:
             return Response({"error": "Match not found."}, status=status.HTTP_404_NOT_FOUND)
 
-        serializer = MatchSerializer(match)
-        return Response(serializer.data, status=status.HTTP_200_OK)
+        match_serializer = MatchSerializer(match)
+        events = MatchEvent.objects.filter(match=match)
+        event_serializer = MatchEventSerializer(events, many=True)
+
+        # 선수 정보도 함께 반환
+        team_players = TeamPlayer.objects.filter(team__match=match)
+        player_serializer = TeamPlayerSerializer(team_players, many=True)
+
+        return Response({
+            "match": match_serializer.data,
+            "events": event_serializer.data,
+            "players": player_serializer.data
+        }, status=status.HTTP_200_OK)
     
 class MatchUpdateView(APIView):
     permission_classes = [IsAuthenticated]
@@ -166,3 +178,39 @@ class MatchEventUpdateView(APIView):
                 "event": MatchEventSerializer(match_event).data
             }, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
+class PlayerUpdateView(APIView):
+    permission_classes = [IsAuthenticated]  # 로그인된 사용자만 접근 가능
+
+    def post(self, request, match_id, *args, **kwargs):
+        try:
+            match = Match.objects.get(id=match_id)
+        except Match.DoesNotExist:
+            return Response({"error": "Match not found."}, status=status.HTTP_404_NOT_FOUND)
+        
+        # 교체할 선수와 교체된 선수 정보 가져오기
+        in_player_id = request.data.get('in_player_id')  # 교체된 선수 ID
+        out_player_id = request.data.get('out_player_id')  # 교체된 선수 ID
+
+        try:
+            in_player = TeamPlayer.objects.get(id=in_player_id)
+            out_player = TeamPlayer.objects.get(id=out_player_id)
+        except TeamPlayer.DoesNotExist:
+            return Response({"error": "Player not found."}, status=status.HTTP_404_NOT_FOUND)
+
+        # 교체 처리: 선발 여부 수정
+        out_player.is_starting_player = False
+        in_player.is_starting_player = True
+        out_player.save()
+        in_player.save()
+
+        # 매치 이벤트 생성
+        MatchEvent.objects.create(
+            match=match,
+            event_type='substitution',
+            timestamp=timezone.now(),
+            added_by=request.user,
+            target_player=out_player
+        )
+
+        return Response({"message": "Player substitution successful."}, status=status.HTTP_200_OK)

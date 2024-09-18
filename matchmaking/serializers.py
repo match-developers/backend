@@ -1,5 +1,6 @@
 from rest_framework import serializers
 from .models.match import Match, MatchEvent
+from .models.team import TeamPlayer
 
 class MatchSerializer(serializers.ModelSerializer):
     class Meta:
@@ -40,3 +41,8 @@ class MatchEventSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         return MatchEvent.objects.create(**validated_data)
+    
+class TeamPlayerSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = TeamPlayer
+        fields = ['id', 'team', 'user', 'is_starting_player']
