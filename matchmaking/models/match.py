@@ -1,16 +1,18 @@
 from django.contrib.contenttypes.fields import GenericRelation
 from django.contrib.postgres.fields import JSONField
+from django.contrib.gis.db import models
 from django.core.exceptions import ValidationError
-from django.db import models
+from django.utils.timezone import now
+from rest_framework.exceptions import ValidationError
+
+from accounts.models.users import User
+from sportsgrounds.models.sports_ground import SportsGround
+from sportsgrounds.models.facilities import Facilities
+from leagues.models.league import League
+from tournaments.models.tournament import Tournament
+from .match import Team, TeamPlayer
 
 from model_utils.models import TimeStampedModel
-
-from leagues.models import League
-from tournaments.models import Tournament
-from . import Match, TeamPlayer
-from accounts.models import User
-from sportsgrounds.models import SportsGround, Facilities
-
 
 # Match 상태를 나타내는 choices (예정됨, 진행 중, 완료됨 등)
 STATUS_CHOICES = [
@@ -43,6 +45,41 @@ class Match(TimeStampedModel):
     @property
     def available_spots(self):
         return self.total_spots - self.participants.count()
+
+    def assign_teams(self):
+        if self.match_type == 'club':
+            # If it's a club match, assign clubs directly
+            club_teams = list(set(participant.user.club for participant in self.participants if participant.user.club))
+            if len(club_teams) == 2:
+                team_1 = Team.objects.create(name=club_teams[0].name, club=club_teams[0], is_red_team=True)
+                team_2 = Team.objects.create(name=club_teams[1].name, club=club_teams[1], is_red_team=False)
+                for player in self.participants.all():
+                    if player.user.club == club_teams[0]:
+                        player.team = team_1
+                    else:
+                        player.team = team_2
+                    player.save()
+        else:
+            # Assign default Red/Blue teams for individual matches
+            red_team = Team.objects.create(name="Red Team", is_red_team=True)
+            blue_team = Team.objects.create(name="Blue Team", is_red_team=False)
+            participants = list(self.participants.all())
+            for idx, player in enumerate(participants):
+                if idx % 2 == 0:
+                    player.team = red_team
+                else:
+                    player.team = blue_team
+                player.save()
+
+    def prevent_overlap(self, user):
+        """Prevent user from joining multiple matches at the same time"""
+        ongoing_matches = Match.objects.filter(
+            participants__user=user,
+            start_time__lt=self.start_time + self.duration,
+            start_time__gt=self.start_time - self.duration,
+        )
+        if ongoing_matches.exists():
+            raise ValidationError("You cannot join another match that overlaps with your current match.")
 
     @classmethod
     def create_match(cls, creator, sports_ground, facility, price, start_time, duration, match_type, total_spots, league=None, tournament=None, winning_method=None):
