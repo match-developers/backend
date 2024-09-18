@@ -37,6 +37,8 @@ class Match(TimeStampedModel):
     referees = models.ManyToManyField(User, related_name="refereed_matches", blank=True)
     spectators = models.ManyToManyField(User, related_name="spectated_matches", blank=True)
     winning_method = models.ForeignKey('WinningMethod', on_delete=models.CASCADE, null=True, blank=True)
+    is_private = models.BooleanField(default=False)  # 공개/비공개 매치 여부
+    join_requests = models.ManyToManyField(User, related_name="join_requests", blank=True)  # 참가 요청 리스트
 
     @property
     def available_spots(self):
@@ -64,6 +66,24 @@ class Match(TimeStampedModel):
 
     def __str__(self):
         return f"{self.creator} created {self.match_type} match at {self.sports_ground}"
+    
+    def cancel_match(self):
+        """매치를 취소로 업데이트하고 관련 사항들을 처리"""
+        if self.status == 'completed':
+            raise ValidationError("이미 완료된 매치는 취소할 수 없습니다.")
+        self.status = 'canceled'
+        self.save()
+        # 알림 시스템에 취소된 매치에 대한 알림을 보내는 로직 추가 가능
+        # Newsfeed 업데이트 등
+
+    def complete_match(self):
+        """매치를 완료로 업데이트하고 관련 사항들을 처리"""
+        if self.status == 'canceled':
+            raise ValidationError("취소된 매치는 완료할 수 없습니다.")
+        self.status = 'completed'
+        self.save()
+        # 알림 시스템에 완료된 매치에 대한 알림을 보내는 로직 추가 가능
+        # Newsfeed 업데이트 등
 class WinningMethod(models.Model):
     points_needed = models.IntegerField()  # 승리 조건으로 필요한 포인트
     time_per_set = models.DurationField()  # 세트 당 시간 (타임 필드)

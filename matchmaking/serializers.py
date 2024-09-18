@@ -4,19 +4,13 @@ from .models import Match
 class MatchSerializer(serializers.ModelSerializer):
     class Meta:
         model = Match
-        fields = ['sports_ground', 'facility', 'price', 'start_time', 'duration', 'match_type', 'total_spots', 'league', 'tournament', 'winning_method']
+        fields = ['sports_ground', 'facility', 'price', 'start_time', 'duration', 'match_type', 'total_spots', 'league', 'tournament', 'winning_method', 'status']
 
     def create(self, validated_data):
         """
         매치 생성 로직을 처리하는 메소드
         """
         return Match.objects.create(**validated_data)
-
-
-class MatchUpdateSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Match
-        fields = ['sports_ground', 'facility', 'price', 'start_time', 'duration', 'total_spots', 'status', 'match_type']
 
     def update(self, instance, validated_data):
         """
@@ -33,3 +27,8 @@ class MatchUpdateSerializer(serializers.ModelSerializer):
         
         instance.save()
         return instance
+
+class MatchJoinSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Match
+        fields = ['is_private', 'participants', 'join_requests']
