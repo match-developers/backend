@@ -3,9 +3,9 @@ from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework.permissions import IsAuthenticated
-from .models.match import Match
+from .models.match import Match, MatchEvent, TeamPlayer
 from .models.team import TeamPlayer
-from .serializers import MatchSerializer
+from .serializers import MatchSerializer, MatchEventSerializer
 from accounts.models.users import User
 
 class MatchCreateView(APIView):
@@ -22,11 +22,11 @@ class MatchCreateView(APIView):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     
 class MatchDetailView(APIView):
-    permission_classes = [IsAuthenticated]  # 로그인된 사용자만 접근 가능
+    permission_classes = [IsAuthenticated]
 
     def get(self, request, match_id, *args, **kwargs):
         try:
-            match = Match.objects.get(id=match_id)
+            match = Match.objects.prefetch_related('events').get(id=match_id)
         except Match.DoesNotExist:
             return Response({"error": "Match not found."}, status=status.HTTP_404_NOT_FOUND)
 
@@ -148,3 +148,21 @@ class ManageJoinRequestView(APIView):
                 return Response({"error": "User did not request to join this match."}, status=status.HTTP_400_BAD_REQUEST)
 
         return Response({"error": "Invalid action."}, status=status.HTTP_400_BAD_REQUEST)
+
+class MatchEventUpdateView(APIView):
+    permission_classes = [IsAuthenticated]  # 로그인된 사용자만 접근 가능
+
+    def post(self, request, match_id, *args, **kwargs):
+        try:
+            match = Match.objects.get(id=match_id)
+        except Match.DoesNotExist:
+            return Response({"error": "Match not found."}, status=status.HTTP_404_NOT_FOUND)
+        
+        serializer = MatchEventSerializer(data=request.data)
+        if serializer.is_valid():
+            match_event = serializer.save(match=match, added_by=request.user)
+            return Response({
+                "message": "Match event added successfully.",
+                "event": MatchEventSerializer(match_event).data
+            }, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)

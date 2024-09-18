@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Match
+from .models.match import Match, MatchEvent
 
 class MatchSerializer(serializers.ModelSerializer):
     class Meta:
@@ -32,3 +32,11 @@ class MatchJoinSerializer(serializers.ModelSerializer):
     class Meta:
         model = Match
         fields = ['is_private', 'participants', 'join_requests']
+        
+class MatchEventSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = MatchEvent
+        fields = ['event_type', 'timestamp', 'added_by', 'target_player']
+
+    def create(self, validated_data):
+        return MatchEvent.objects.create(**validated_data)

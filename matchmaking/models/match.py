@@ -219,4 +219,27 @@ class GroundReview(models.Model):
 
     def __str__(self):
         return f"Review for {self.ground.name} by {self.reviewer.username}"
+    
+    #assistant
+class MatchEvent(TimeStampedModel):
+    EVENT_TYPES = (
+        ('point', 'Point'),
+        ('special_point', 'Special Point'),
+        ('pause', 'Pause'),
+        ('set_end', 'Set End'),
+        ('match_end', 'Match End'),
+    )
+
+    match = models.ForeignKey(Match, related_name="events", on_delete=models.CASCADE)
+    event_type = models.CharField(max_length=50, choices=EVENT_TYPES)
+    timestamp = models.DateTimeField(auto_now_add=True)
+    added_by = models.ForeignKey(TeamPlayer, on_delete=models.CASCADE)
+    target_player = models.ForeignKey(TeamPlayer, related_name="target_events", on_delete=models.CASCADE, null=True, blank=True)
+    
+    def __str__(self):
+        if self.event_type in ['point', 'special_point']:
+            return f"{self.added_by} added {self.event_type} to {self.target_player} at {self.timestamp}"
+        else:
+            return f"{self.added_by} added {self.event_type} at {self.timestamp}"
+    
 
