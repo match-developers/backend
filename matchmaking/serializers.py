@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models.match import Match, MatchEvent, PressConference, TeamTalk
+from .models.match import Match, MatchEvent, PressConference, TeamTalk, PlayerReview, GroundReview
 from .models.team import TeamPlayer
 
 class MatchSerializer(serializers.ModelSerializer):
@@ -58,3 +58,13 @@ class TeamTalkSerializer(serializers.ModelSerializer):
     class Meta:
         model = TeamTalk
         fields = ['chat_log', 'team', 'match']
+        
+class PlayerReviewSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = PlayerReview
+        fields = ['manner', 'performance', 'written_review']
+
+class GroundReviewSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = GroundReview
+        fields = ['quality', 'safety', 'support', 'written_review']

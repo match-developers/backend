@@ -4,9 +4,9 @@ from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework.permissions import IsAuthenticated
-from .models.match import Match, MatchEvent, TeamPlayer, PressConference, TeamTalk
+from .models.match import Match, MatchEvent, TeamPlayer, PressConference, TeamTalk, PlayerReview, GroundReview, SportsGround
 from .models.team import TeamPlayer
-from .serializers import MatchSerializer, MatchEventSerializer, TeamPlayerSerializer
+from .serializers import MatchSerializer, MatchEventSerializer, TeamPlayerSerializer, PlayerReviewSerializer, GroundReviewSerializer
 from accounts.models.users import User
 
 class MatchCreateView(APIView):
@@ -327,3 +327,44 @@ class TeamTalkView(APIView):
         team_talk.save()
 
         return Response({"message": "Message sent.", "chat_log": team_talk.chat_log}, status=status.HTTP_200_OK)
+    
+class SubmitReviewView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request, match_id, *args, **kwargs):
+        try:
+            match = Match.objects.get(id=match_id)
+        except Match.DoesNotExist:
+            return Response({"error": "Match not found."}, status=status.HTTP_404_NOT_FOUND)
+
+        # 플레이어 리뷰 작성
+        players = match.participants.exclude(user=request.user)
+        for player in players:
+            review_data = request.data.get(f'player_{player.id}', None)
+            if review_data:
+                player_review_serializer = PlayerReviewSerializer(data=review_data)
+                if player_review_serializer.is_valid():
+                    PlayerReview.objects.create(
+                        match=match,
+                        reviewer=request.user,
+                        player=player.user,
+                        **player_review_serializer.validated_data
+                    )
+                else:
+                    return Response(player_review_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+        # 구장 리뷰 작성
+        ground_review_data = request.data.get('ground_review', None)
+        if ground_review_data:
+            ground_review_serializer = GroundReviewSerializer(data=ground_review_data)
+            if ground_review_serializer.is_valid():
+                GroundReview.objects.create(
+                    match=match,
+                    reviewer=request.user,
+                    ground=match.sports_ground,
+                    **ground_review_serializer.validated_data
+                )
+            else:
+                return Response(ground_review_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+        return Response({"message": "Reviews submitted successfully."}, status=status.HTTP_201_CREATED)

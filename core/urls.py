@@ -19,7 +19,7 @@ Including another URLconf
 
 from django.contrib import admin
 from django.urls import path, include
-from matchmaking.views import MatchCreateView, MatchDetailView, MatchUpdateView, ManageMatchView, SearchMatchView, JoinMatchView, ManageJoinRequestView, MatchEventUpdateView
+from matchmaking.views import MatchCreateView, MatchDetailView, MatchUpdateView, ManageMatchView, SearchMatchView, JoinMatchView, ManageJoinRequestView, MatchEventUpdateView, SubmitReviewView
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -32,4 +32,5 @@ urlpatterns = [
     path('matches/<int:match_id>/join/', JoinMatchView.as_view(), name='join-match'),  # 매치 참가
     path('matches/<int:match_id>/join-request/<int:user_id>/', ManageJoinRequestView.as_view(), name='manage-join-request'),
     path('matches/<int:match_id>/events/', MatchEventUpdateView.as_view(), name='update-match-event'),
+    path('matches/<int:match_id>/review/', SubmitReviewView.as_view(), name='submit-review')
 ]
