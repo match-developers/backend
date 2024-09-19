@@ -4,7 +4,7 @@ from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework.permissions import IsAuthenticated
-from .models.match import Match, MatchEvent, TeamPlayer
+from .models.match import Match, MatchEvent, TeamPlayer, PressConference, TeamTalk
 from .models.team import TeamPlayer
 from .serializers import MatchSerializer, MatchEventSerializer, TeamPlayerSerializer
 from accounts.models.users import User
@@ -214,3 +214,116 @@ class PlayerUpdateView(APIView):
         )
 
         return Response({"message": "Player substitution successful."}, status=status.HTTP_200_OK)
+    
+from rest_framework import status
+from rest_framework.response import Response
+from rest_framework.views import APIView
+from rest_framework.permissions import IsAuthenticated
+from .models import Match, PressConference, TeamPlayer
+from .serializers import PressConferenceSerializer
+from accounts.models import User
+
+
+class PressConferenceView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, match_id, *args, **kwargs):
+        """
+        Press Conference 정보를 불러오는 뷰
+        """
+        try:
+            press_conference = PressConference.objects.get(match_id=match_id)
+        except PressConference.DoesNotExist:
+            return Response({"error": "Press Conference not found."}, status=status.HTTP_404_NOT_FOUND)
+
+        # Press Conference 정보 반환 (참가자, 질문 등)
+        serializer = PressConferenceSerializer(press_conference)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+    def post(self, request, match_id, *args, **kwargs):
+        """
+        질문 생성 및 답변 처리. 처음 호출 시 질문을 생성하고, 그 후로는 답변을 받아 처리.
+        """
+        try:
+            press_conference = PressConference.objects.get(match_id=match_id)
+        except PressConference.DoesNotExist:
+            return Response({"error": "Press Conference not found."}, status=status.HTTP_404_NOT_FOUND)
+
+        # 질문 생성이 필요하면
+        if not press_conference.questions:
+            press_conference.generate_questions()
+            return Response({"message": "Questions generated successfully."}, status=status.HTTP_201_CREATED)
+
+        # 질문이 이미 생성된 경우, 답변을 처리하고 다음 질문을 반환
+        answer = request.data.get("answer", "")
+        if answer:
+            next_question = press_conference.process_answer(answer)
+            return Response({"next_question": next_question}, status=status.HTTP_200_OK)
+        else:
+            return Response({"error": "Answer not provided."}, status=status.HTTP_400_BAD_REQUEST)
+
+    def put(self, request, match_id, *args, **kwargs):
+        """
+        대화를 추가로 이어갈 때 사용할 수 있는 뷰.
+        """
+        try:
+            press_conference = PressConference.objects.get(match_id=match_id)
+        except PressConference.DoesNotExist:
+            return Response({"error": "Press Conference not found."}, status=status.HTTP_404_NOT_FOUND)
+
+        # 추가 대화 저장
+        chat_message = request.data.get("message", "")
+        if chat_message:
+            press_conference.process_answer(chat_message)
+            return Response({"message": "Chat message saved."}, status=status.HTTP_200_OK)
+        else:
+            return Response({"error": "Message not provided."}, status=status.HTTP_400_BAD_REQUEST)
+
+class StartPressConferenceView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request, match_id, *args, **kwargs):
+        """
+        Press Conference 시작 뷰. 처음 실행 시 사용자를 참가자로 추가하고, 첫 질문 생성.
+        """
+        try:
+            match = Match.objects.get(id=match_id)
+        except Match.DoesNotExist:
+            return Response({"error": "Match not found."}, status=status.HTTP_404_NOT_FOUND)
+
+        # 이미 Press Conference가 있으면
+        if PressConference.objects.filter(match=match).exists():
+            return Response({"error": "Press Conference already exists for this match."}, status=status.HTTP_400_BAD_REQUEST)
+
+        # Press Conference 생성
+        press_conference = PressConference.objects.create(match=match)
+        press_conference.participants.set(match.participants.all())  # 참가자 설정
+        press_conference.generate_questions()  # 질문 생성
+
+        return Response({"message": "Press Conference started and questions generated."}, status=status.HTTP_201_CREATED)
+    
+class TeamTalkView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request, match_id, team_id):
+        try:
+            match = Match.objects.get(id=match_id)
+            team = TeamPlayer.objects.get(id=team_id, match=match)
+        except (Match.DoesNotExist, TeamPlayer.DoesNotExist):
+            return Response({"error": "Match or team not found."}, status=status.HTTP_404_NOT_FOUND)
+
+        # 채팅 메시지 가져오기
+        message = request.data.get('message')
+        if not message:
+            return Response({"error": "Message content is required."}, status=status.HTTP_400_BAD_REQUEST)
+
+        # 채팅 로그에 저장
+        team_talk, created = TeamTalk.objects.get_or_create(match=match, team=team)
+        team_talk.chat_log.append({
+            "user": request.user.username,
+            "message": message,
+            "timestamp": timezone.now().isoformat(),
+        })
+        team_talk.save()
+
+        return Response({"message": "Message sent.", "chat_log": team_talk.chat_log}, status=status.HTTP_200_OK)

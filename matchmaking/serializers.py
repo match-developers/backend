@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models.match import Match, MatchEvent
+from .models.match import Match, MatchEvent, PressConference, TeamTalk
 from .models.team import TeamPlayer
 
 class MatchSerializer(serializers.ModelSerializer):
@@ -46,3 +46,15 @@ class TeamPlayerSerializer(serializers.ModelSerializer):
     class Meta:
         model = TeamPlayer
         fields = ['id', 'team', 'user', 'is_starting_player']
+        
+class PressConferenceSerializer(serializers.ModelSerializer):
+    participants = serializers.StringRelatedField(many=True)
+    
+    class Meta:
+        model = PressConference
+        fields = ['match', 'participants', 'questions', 'chat_log', 'current_question_index']
+        
+class TeamTalkSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = TeamTalk
+        fields = ['chat_log', 'team', 'match']

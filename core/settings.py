@@ -12,6 +12,7 @@ https://docs.djangoproject.com/en/4.2/ref/settings/
 
 from pathlib import Path
 from decouple import config
+import os
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -251,3 +252,5 @@ LOGGING = {
 }
 
 GDAL_LIBRARY_PATH = '/usr/local/opt/gdal/lib/libgdal.dylib'
+
+OPENAI_API_KEY = os.getenv('OPENAI_API_KEY', 'your-api-key')

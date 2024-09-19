@@ -1,11 +1,15 @@
+import openai
+
+from django.conf import settings
 from django.contrib.contenttypes.fields import GenericRelation
 from django.contrib.postgres.fields import JSONField
 from django.contrib.gis.db import models
 from django.core.exceptions import ValidationError
+from django.utils import timezone
 from django.utils.timezone import now
 from rest_framework.exceptions import ValidationError
 
-from accounts.models.users import User
+from accounts.models.users import User, UserStatistics
 from sportsgrounds.models.sports_ground import SportsGround
 from sportsgrounds.models.facilities import Facilities
 from leagues.models.league import League
@@ -169,23 +173,110 @@ class MatchEvent(TimeStampedModel):
 class PressConference(models.Model):
     match = models.OneToOneField(Match, related_name="press_conference", on_delete=models.CASCADE)
     participants = models.ManyToManyField(TeamPlayer, related_name="press_conferences")
-    questions = JSONField()  # ChatGPT API를 통해 생성된 질문들
-    chat_log = models.JSONField(blank=True, null=True)
-
-    def __str__(self):
-        return f"Press Conference for match {self.match}"
+    questions = models.JSONField()  # ChatGPT API로 생성된 질문들 저장
+    chat_log = models.JSONField(blank=True, null=True)  # 대화 기록 저장
+    current_question_index = models.IntegerField(default=0)  # 현재 질문 인덱스
 
     def generate_questions(self):
         """
-        ChatGPT API와 연동해 자동으로 질문 생성하는 메서드.
+        ChatGPT API와 연동해 자동으로 질문을 생성하는 메서드.
         질문 목록을 self.questions에 저장함.
         """
-        # 이곳에 GPT API 호출 및 질문 생성 로직 추가
-        pass
+        # OpenAI API 키 설정
+        openai.api_key = settings.OPENAI_API_KEY
+
+        # 프롬프트 작성
+        prompt = f"Generate 5 interesting questions for a football match involving the following participants:\n"
+        for player in self.match.participants.all():
+            prompt += f"- {player.user.username}, stats: {player.user_statistics}\n"
+        prompt += "The questions should be engaging and related to the match and players."
+
+        # OpenAI API를 통해 질문 생성
+        try:
+            response = openai.Completion.create(
+                engine="text-davinci-003",
+                prompt=prompt,
+                max_tokens=150,
+                n=5,
+                stop=None,
+                temperature=0.7,
+            )
+
+            # 생성된 질문을 JSON 형태로 저장
+            generated_questions = [choice['text'].strip() for choice in response['choices']]
+            self.questions = generated_questions
+            self.save()
+        except Exception as e:
+            print(f"Error generating questions: {e}")
+            return None
+
+    def create_prompt(self):
+        """
+        경기 참가자와 경기 세부 정보를 바탕으로 ChatGPT 프롬프트 생성.
+        """
+        # 경기 및 참가자 정보
+        match_info = f"Match between {self.match.sports_ground.name} starting at {self.match.start_time}."
+        player_info = []
+
+        for participant in self.participants.all():
+            user_stats = UserStatistics.objects.get(user=participant.user)
+            player_info.append(
+                f"Player {participant.user.username} with {user_stats.mp} matches, "
+                f"{user_stats.wins} wins, and {user_stats.manner} manner score."
+            )
+
+        # 경기 및 참가자 프롬프트 생성
+        prompt = f"{match_info}\nParticipants:\n" + "\n".join(player_info)
+        return prompt
+
+    def ask_next_question(self):
+        """
+        Press Conference에서 다음 질문을 던짐.
+        """
+        if self.current_question_index == 0:
+            # 첫 번째 질문 전에 기본적인 경기 소개 메시지
+            intro_message = f"Welcome to the press conference for the upcoming match at {self.match.sports_ground.name}."
+            self.current_question_index += 1
+            self.save()
+            return intro_message
+        elif self.current_question_index <= len(self.questions):
+            next_question = self.questions[self.current_question_index - 1]
+            self.current_question_index += 1
+            self.save()
+            return next_question
+        else:
+            return "That concludes the press conference questions. Feel free to continue the discussion."
+
+    def process_answer(self, answer):
+        """
+        사용자가 답변을 제출하면, 대화 로그에 저장하고 다음 질문을 던짐.
+        """
+        if not self.chat_log:
+            self.chat_log = []
+
+        if self.current_question_index > 1:  # 질문 후 답변 기록
+            current_question = self.questions[self.current_question_index - 2]  # 방금 던진 질문
+            self.chat_log.append({
+                "question": current_question,
+                "answer": answer,
+                "timestamp": timezone.now().isoformat(),
+            })
+        else:
+            # 경기 소개 부분에는 질문이 없으므로 첫 번째 질문 대기 상태
+            self.chat_log.append({
+                "message": answer,
+                "timestamp": timezone.now().isoformat(),
+            })
+
+        self.save()
+
+        # 다음 질문 던지기
+        return self.ask_next_question()
+    
 class TeamTalk(models.Model):
     match = models.ForeignKey(Match, related_name="team_talks", on_delete=models.CASCADE)
     team = models.ForeignKey(TeamPlayer, related_name="team_talks", on_delete=models.CASCADE)  # 팀 플레이어와 연결
-    chat_log = JSONField()  # 팀 내에서 이루어진 채팅 내역
+    chat_log = models.JSONField()  # 팀 내에서 이루어진 채팅 내역
 
     def __str__(self):
         return f"Team Talk for {self.team} during match {self.match}"
