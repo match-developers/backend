@@ -20,6 +20,7 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path, include
 from matchmaking.views import MatchCreateView, MatchDetailView, MatchUpdateView, ManageMatchView, SearchMatchView, JoinMatchView, ManageJoinRequestView, MatchEventUpdateView, SubmitReviewView
+from leagues.views import LeagueCreateView, LeagueDetailView, LeagueUpdateView, LeagueDeleteView, JoinLeagueView, ManageLeagueView, LeagueProgressView
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -32,5 +33,12 @@ urlpatterns = [
     path('matches/<int:match_id>/join/', JoinMatchView.as_view(), name='join-match'),  # 매치 참가
     path('matches/<int:match_id>/join-request/<int:user_id>/', ManageJoinRequestView.as_view(), name='manage-join-request'),
     path('matches/<int:match_id>/events/', MatchEventUpdateView.as_view(), name='update-match-event'),
-    path('matches/<int:match_id>/review/', SubmitReviewView.as_view(), name='submit-review')
+    path('matches/<int:match_id>/review/', SubmitReviewView.as_view(), name='submit-review'),
+    path('create/', LeagueCreateView.as_view(), name='create_league'),
+    path('<int:league_id>/', LeagueDetailView.as_view(), name='detail_league'),
+    path('<int:league_id>/update/', LeagueUpdateView.as_view(), name='update_league'),
+    path('<int:league_id>/delete/', LeagueDeleteView.as_view(), name='delete_league'),
+    path('<int:league_id>/join/', JoinLeagueView.as_view(), name='join_league'),
+    path('<int:league_id>/manage/', ManageLeagueView.as_view(), name='manage_league'),
+    path('<int:league_id>/progress/', LeagueProgressView.as_view(), name='progress_league'),
 ]
