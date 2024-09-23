@@ -1,6 +1,11 @@
 from rest_framework import serializers
 from .models.match import Match, MatchEvent, PressConference, TeamTalk, PlayerReview, GroundReview
-from .models.team import TeamPlayer
+from .models.team import Team, TeamPlayer
+
+class TeamSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Team
+        fields = ['id', 'name', 'club', 'is_red_team']  # 필요한 필드 추가
 
 class MatchSerializer(serializers.ModelSerializer):
     class Meta:

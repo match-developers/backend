@@ -21,6 +21,7 @@ from django.contrib import admin
 from django.urls import path, include
 from matchmaking.views import MatchCreateView, MatchDetailView, MatchUpdateView, ManageMatchView, SearchMatchView, JoinMatchView, ManageJoinRequestView, MatchEventUpdateView, SubmitReviewView
 from leagues.views import LeagueCreateView, LeagueDetailView, LeagueUpdateView, LeagueDeleteView, JoinLeagueView, ManageLeagueView, LeagueProgressView
+from tournaments.views import TournamentCreateView, TournamentDetailView, TournamentUpdateView, TournamentDeleteView, JoinTournamentView, MatchCompleteView
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -34,6 +35,7 @@ urlpatterns = [
     path('matches/<int:match_id>/join-request/<int:user_id>/', ManageJoinRequestView.as_view(), name='manage-join-request'),
     path('matches/<int:match_id>/events/', MatchEventUpdateView.as_view(), name='update-match-event'),
     path('matches/<int:match_id>/review/', SubmitReviewView.as_view(), name='submit-review'),
+    
     path('create/', LeagueCreateView.as_view(), name='create_league'),
     path('<int:league_id>/', LeagueDetailView.as_view(), name='detail_league'),
     path('<int:league_id>/update/', LeagueUpdateView.as_view(), name='update_league'),
@@ -41,4 +43,11 @@ urlpatterns = [
     path('<int:league_id>/join/', JoinLeagueView.as_view(), name='join_league'),
     path('<int:league_id>/manage/', ManageLeagueView.as_view(), name='manage_league'),
     path('<int:league_id>/progress/', LeagueProgressView.as_view(), name='progress_league'),
+    
+        path('create/', TournamentCreateView.as_view(), name='create_tournament'),
+    path('<int:tournament_id>/', TournamentDetailView.as_view(), name='detail_tournament'),
+    path('<int:tournament_id>/update/', TournamentUpdateView.as_view(), name='update_tournament'),
+    path('<int:tournament_id>/delete/', TournamentDeleteView.as_view(), name='delete_tournament'),
+    path('<int:tournament_id>/join/', JoinTournamentView.as_view(), name='join_tournament'),
+    path('match/<int:match_id>/complete/', MatchCompleteView.as_view(), name='complete_match'),
 ]
