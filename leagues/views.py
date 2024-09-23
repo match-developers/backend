@@ -107,40 +107,45 @@ class JoinLeagueView(APIView):
         league.save()
         return Response({"message": "Successfully joined the league."}, status=status.HTTP_200_OK)
 
+from rest_framework import status
+from rest_framework.response import Response
+from rest_framework.views import APIView
+from leagues.models.league import League, LeagueStatus
+from leagues.models.league_match import LeagueMatch
+from matchmaking.models.match import Match
+from rest_framework.permissions import IsAuthenticated
+from django.utils import timezone
 
-class ManageLeagueView(APIView):
+class LeagueMatchCompleteView(APIView):
+    """
+    리그의 매치가 완료되었을 때 호출되어 자동으로 다음 라운드로 진행하게 만듭니다.
+    """
     permission_classes = [IsAuthenticated]
 
-    def post(self, request, league_id):
+    def post(self, request, match_id, *args, **kwargs):
         try:
-            league = League.objects.get(id=league_id, organizer=request.user)
-        except League.DoesNotExist:
-            return Response({"error": "League not found or permission denied."}, status=status.HTTP_404_NOT_FOUND)
+            match = Match.objects.get(id=match_id)
+            league_match = LeagueMatch.objects.get(match=match)
+            league = league_match.league
+        except (Match.DoesNotExist, LeagueMatch.DoesNotExist):
+            return Response({"error": "Match or League not found."}, status=status.HTTP_404_NOT_FOUND)
 
-        action = request.data.get('action')
-        if action == 'start':
-            if league.participants.count() < league.max_teams:
-                return Response({"error": "Not enough participants to start the league."}, status=status.HTTP_400_BAD_REQUEST)
-            league.start_date = timezone.now().date()
-            league.save()
-            league.generate_schedule()  # 스케줄 생성
-            return Response({"message": "League started successfully."}, status=status.HTTP_200_OK)
-        return Response({"error": "Invalid action."}, status=status.HTTP_400_BAD_REQUEST)
+        # 매치 상태를 완료로 업데이트
+        if match.status == 'completed':
+            return Response({"error": "This match is already completed."}, status=status.HTTP_400_BAD_REQUEST)
+        
+        match.status = 'completed'
+        match.save()
 
-
-class LeagueProgressView(APIView):
-    permission_classes = [IsAuthenticated]
-
-    def post(self, request, league_id):
-        try:
-            league = League.objects.get(id=league_id)
-        except League.DoesNotExist:
-            return Response({"error": "League not found."}, status=status.HTTP_404_NOT_FOUND)
-
-        # 라운드가 진행되었는지 체크하고, 진행 상황 업데이트
-        if league.current_round < league.total_number_of_rounds:
-            league.current_round += 1
-            league.save()
-            return Response({"message": "League round progressed to the next round."}, status=status.HTTP_200_OK)
-        else:
-            return Response({"error": "All rounds have been completed."}, status=status.HTTP_400_BAD_REQUEST)
+        # 리그의 모든 매치가 완료되었는지 확인
+        all_matches_completed = LeagueMatch.objects.filter(league=league, match__status__in=['scheduled', 'ongoing']).count() == 0
+        
+        if all_matches_completed:
+            if league.current_round < league.total_number_of_rounds:
+                league.current_round += 1
+                league.save()
+                # 다음 라운드로 전환 시 알림 전송 (나중에 추가 가능)
+                return Response({"message": "All matches completed. Proceeding to the next round."}, status=status.HTTP_200_OK)
+            else:
+                return Response({"message": "All rounds are completed. The league is finished."}, status=status.HTTP_200_OK)
+        return Response({"message": "Match completed. Waiting for other matches in the round to finish."}, status=status.HTTP_200_OK)
