@@ -6,16 +6,20 @@ from rest_framework.views import APIView
 from rest_framework.permissions import IsAuthenticated
 from .models.match import Match, MatchEvent, TeamPlayer, PressConference, TeamTalk, PlayerReview, GroundReview, SportsGround
 from .models.team import TeamPlayer
-from .serializers import MatchSerializer, MatchEventSerializer, TeamPlayerSerializer, PlayerReviewSerializer, GroundReviewSerializer
+from .serializers import MatchSerializer, MatchEventSerializer, TeamPlayerSerializer, PlayerReviewSerializer, GroundReviewSerializer, PressConferenceSerializer
 from accounts.models.users import User
 
-class MatchCreateView(APIView):
-    permission_classes = [IsAuthenticated]  # 로그인된 사용자만 접근 가능
+class CreateMatchView(APIView):
+    permission_classes = [IsAuthenticated]
 
     def post(self, request, *args, **kwargs):
         serializer = MatchSerializer(data=request.data, context={'request': request})
         if serializer.is_valid():
             match = serializer.save(creator=request.user)
+            
+            # 매치 생성 시 포스트 생성
+            match.create_match_post()
+
             return Response({
                 "message": "Match created successfully.",
                 "match": MatchSerializer(match).data
@@ -71,23 +75,55 @@ class MatchUpdateView(APIView):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     
 class ManageMatchView(APIView):
-    permission_classes = [IsAuthenticated]  # 로그인된 사용자만 접근 가능
+    permission_classes = [IsAuthenticated]
 
     def post(self, request, match_id):
         try:
             match = Match.objects.get(id=match_id, creator=request.user)
         except Match.DoesNotExist:
-            return Response({"error": "매치를 찾을 수 없거나 권한이 없습니다."}, status=status.HTTP_404_NOT_FOUND)
+            return Response({"error": "Match not found or permission denied."}, status=status.HTTP_404_NOT_FOUND)
 
         action = request.data.get('action')
         if action == 'cancel':
             match.cancel_match()
         elif action == 'complete':
-            match.complete_match()
+            match.complete_match()  # 매치 완료 시 뉴스피드 업데이트
+        elif action == 'start':
+            match.start_match()  # 매치 시작 시 뉴스피드 업데이트
         else:
-            return Response({"error": "잘못된 액션입니다."}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({"error": "Invalid action."}, status=status.HTTP_400_BAD_REQUEST)
 
-        return Response({"message": f"매치 상태가 '{match.status}'로 업데이트되었습니다."}, status=status.HTTP_200_OK)
+        return Response({"message": f"Match status updated to '{match.status}'."}, status=status.HTTP_200_OK)
+
+class MatchStartView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request, match_id):
+        try:
+            match = Match.objects.get(id=match_id, creator=request.user)
+        except Match.DoesNotExist:
+            return Response({"error": "Match not found or permission denied."}, status=status.HTTP_404_NOT_FOUND)
+
+        if match.status == 'scheduled':
+            match.start_match()  # 매치 시작 로직
+            return Response({"message": "Match started successfully."}, status=status.HTTP_200_OK)
+        else:
+            return Response({"error": "Cannot start a match that is not scheduled."}, status=status.HTTP_400_BAD_REQUEST)
+        
+class MatchCompleteView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request, match_id):
+        try:
+            match = Match.objects.get(id=match_id, creator=request.user)
+        except Match.DoesNotExist:
+            return Response({"error": "Match not found or permission denied."}, status=status.HTTP_404_NOT_FOUND)
+
+        if match.status == 'ongoing':
+            match.complete_match()  # 매치 완료 로직
+            return Response({"message": "Match completed successfully."}, status=status.HTTP_200_OK)
+        else:
+            return Response({"error": "Cannot complete a match that is not ongoing."}, status=status.HTTP_400_BAD_REQUEST)
     
 class SearchMatchView(APIView):
     permission_classes = [IsAuthenticated]
@@ -214,14 +250,6 @@ class PlayerUpdateView(APIView):
         )
 
         return Response({"message": "Player substitution successful."}, status=status.HTTP_200_OK)
-    
-from rest_framework import status
-from rest_framework.response import Response
-from rest_framework.views import APIView
-from rest_framework.permissions import IsAuthenticated
-from .models import Match, PressConference, TeamPlayer
-from .serializers import PressConferenceSerializer
-from accounts.models import User
 
 
 class PressConferenceView(APIView):

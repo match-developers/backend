@@ -15,6 +15,8 @@ from sportsgrounds.models.facilities import Facilities
 from leagues.models.league import League
 from tournaments.models.tournament import Tournament
 from .match import Team, TeamPlayer
+from newsfeed.models.newsfeed import NewsfeedPost
+from newsfeed.models.match_post import MatchPost
 
 from model_utils.models import TimeStampedModel
 
@@ -103,28 +105,54 @@ class Match(TimeStampedModel):
             tournament=tournament,
             winning_method=winning_method
         )
+        # 매치 생성 시 뉴스피드 포스트 생성
+        match.create_match_post()
         return match
 
-    def __str__(self):
-        return f"{self.creator} created {self.match_type} match at {self.sports_ground}"
-    
-    def cancel_match(self):
-        """매치를 취소로 업데이트하고 관련 사항들을 처리"""
-        if self.status == 'completed':
-            raise ValidationError("이미 완료된 매치는 취소할 수 없습니다.")
-        self.status = 'canceled'
+    def create_match_post(self):
+        """
+        매치 생성 시, 매치 포스트를 뉴스피드에 생성하는 메서드.
+        """
+        newsfeed_post = NewsfeedPost.objects.create(
+            newsfeed=self.creator.newsfeed,  # 매치 생성자의 뉴스피드에 추가
+            post_type="match",
+            post_id=self.id,
+        )
+
+        # 매치 포스트 생성
+        MatchPost.objects.create(
+            match=self,
+            created_by=self.creator,
+            post_content=f"Match scheduled at {self.sports_ground.name}",
+            newsfeed_post=newsfeed_post
+        )
+
+    def start_match(self):
+        """
+        매치 시작 시 뉴스피드 업데이트
+        """
+        self.status = 'ongoing'
         self.save()
-        # 알림 시스템에 취소된 매치에 대한 알림을 보내는 로직 추가 가능
-        # Newsfeed 업데이트 등
+
+        # 뉴스피드 업데이트
+        newsfeed_post = NewsfeedPost.objects.get(post_id=self.id, post_type="match")
+        newsfeed_post.post_content = f"Match started at {self.sports_ground.name}"
+        newsfeed_post.pinned = True  # 매치가 시작되면 뉴스피드 상단에 고정
+        newsfeed_post.save()
 
     def complete_match(self):
-        """매치를 완료로 업데이트하고 관련 사항들을 처리"""
-        if self.status == 'canceled':
-            raise ValidationError("취소된 매치는 완료할 수 없습니다.")
+        """
+        매치가 완료될 때 뉴스피드에 업데이트.
+        """
         self.status = 'completed'
         self.save()
-        # 알림 시스템에 완료된 매치에 대한 알림을 보내는 로직 추가 가능
-        # Newsfeed 업데이트 등
+
+        # 뉴스피드 포스트 업데이트
+        newsfeed_post = NewsfeedPost.objects.get(post_id=self.id, post_type="match")
+        newsfeed_post.post_content = f"Match completed. Final score: {self.score.home_score} - {self.score.away_score}"
+        newsfeed_post.pinned = False  # 매치가 완료되면 고정 해제
+        newsfeed_post.save()
+        
 class WinningMethod(models.Model):
     points_needed = models.IntegerField()  # 승리 조건으로 필요한 포인트
     time_per_set = models.DurationField()  # 세트 당 시간 (타임 필드)
