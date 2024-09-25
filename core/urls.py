@@ -20,7 +20,9 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path, include
 from matchmaking.views import CreateMatchView, MatchDetailView, MatchUpdateView, ManageMatchView, MatchStartView, MatchCompleteView, SearchMatchView, JoinMatchView, ManageJoinRequestView, MatchEventUpdateView, SubmitReviewView
+
 from leagues.views import LeagueCreateView, LeagueDetailView, LeagueUpdateView, LeagueDeleteView, JoinLeagueView, LeagueMatchCompleteView
+
 from tournaments.views import TournamentCreateView, TournamentDetailView, TournamentUpdateView, TournamentDeleteView, JoinTournamentView, MatchCompleteView
     # newsfeed/urls.py
 

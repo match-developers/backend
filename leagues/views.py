@@ -19,7 +19,10 @@ class LeagueCreateView(APIView):
             league = serializer.save(organizer=request.user)
             if league.league_type == 'individual':
                 league.generate_teams()
-            league.save()
+            
+            # 리그 생성 시 LeaguePost를 생성하여 뉴스피드에 표시
+            league.create_league_post()
+
             return Response({
                 "message": "League created successfully.",
                 "league": LeagueSerializer(league).data
@@ -105,21 +108,14 @@ class JoinLeagueView(APIView):
             league.participants.add(team)
 
         league.save()
+
+        # 참가 인원이 꽉 찼을 경우 뉴스피드 포스트 업데이트
+        if league.participants.count() == league.total_number_of_teams:
+            league.update_league_post_for_full_participation()
+
         return Response({"message": "Successfully joined the league."}, status=status.HTTP_200_OK)
 
-from rest_framework import status
-from rest_framework.response import Response
-from rest_framework.views import APIView
-from leagues.models.league import League, LeagueStatus
-from leagues.models.league_match import LeagueMatch
-from matchmaking.models.match import Match
-from rest_framework.permissions import IsAuthenticated
-from django.utils import timezone
-
 class LeagueMatchCompleteView(APIView):
-    """
-    리그의 매치가 완료되었을 때 호출되어 자동으로 다음 라운드로 진행하게 만듭니다.
-    """
     permission_classes = [IsAuthenticated]
 
     def post(self, request, match_id, *args, **kwargs):
@@ -144,8 +140,13 @@ class LeagueMatchCompleteView(APIView):
             if league.current_round < league.total_number_of_rounds:
                 league.current_round += 1
                 league.save()
-                # 다음 라운드로 전환 시 알림 전송 (나중에 추가 가능)
+
+                # 다음 라운드로 전환 시 뉴스피드 포스트 업데이트
+                league.update_league_post_for_new_round()
+
                 return Response({"message": "All matches completed. Proceeding to the next round."}, status=status.HTTP_200_OK)
             else:
+                # 리그가 완료된 경우 최종 포스트 업데이트
+                league.update_league_post_for_completion()
                 return Response({"message": "All rounds are completed. The league is finished."}, status=status.HTTP_200_OK)
         return Response({"message": "Match completed. Waiting for other matches in the round to finish."}, status=status.HTTP_200_OK)

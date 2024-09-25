@@ -4,6 +4,8 @@ from django.db import models
 from accounts.models.users import User, UserStatistics
 from matchmaking.models.match import Match
 from matchmaking.models.team import Team, TeamPlayer
+from newsfeed.models.newsfeed import NewsfeedPost
+from newsfeed.models.league_post import LeaguePost
 
 # League 모델
 class League(models.Model):
@@ -95,6 +97,54 @@ class League(models.Model):
             raise ValidationError("This league is full.")
 
         return True
+    
+    def create_league_post(self):
+        """
+        리그 생성 시, 뉴스피드에 포스트를 생성하는 메서드.
+        """
+        # 뉴스피드 포스트 생성
+        newsfeed_post = NewsfeedPost.objects.create(
+            newsfeed=self.organizer.newsfeed,  # 리그 주최자의 뉴스피드에 추가
+            post_type="league",
+            post_id=self.id,
+            post_content=f"League {self.league_name} has been created! Join now!"
+        )
+
+        # 리그 포스트 생성
+        LeaguePost.objects.create(
+            league=self,
+            created_by=self.organizer,
+            post_content=f"League {self.league_name} has been created!",
+            newsfeed_post=newsfeed_post
+        )
+
+### 2. 참가 인원이 꽉 찼을 때 포스트 업데이트
+    def update_league_post_on_full_participation(self):
+        """
+        리그 참가 인원이 꽉 찼을 때 뉴스피드 포스트 업데이트
+        """
+        if self.participants.count() >= self.max_teams:  # 모든 팀이 참여했을 때
+            newsfeed_post = NewsfeedPost.objects.get(post_id=self.id, post_type="league")
+            newsfeed_post.post_content = f"League {self.league_name} is now full! The games will begin soon."
+            newsfeed_post.save()
+
+### 3. 라운드 완료 후 포스트 업데이트
+    def update_league_post_on_round_completion(self):
+        """
+        각 라운드가 완료되었을 때 뉴스피드 포스트 업데이트
+        """
+        newsfeed_post = NewsfeedPost.objects.get(post_id=self.id, post_type="league")
+        newsfeed_post.post_content = f"Round {self.current_round} of League {self.league_name} is now complete!"
+        newsfeed_post.save()
+
+### 4. 리그 종료 시 최종 포스트 업데이트
+    def update_league_post_on_completion(self):
+        """
+        리그가 완료되었을 때 최종 결과를 뉴스피드 포스트로 업데이트
+        """
+        newsfeed_post = NewsfeedPost.objects.get(post_id=self.id, post_type="league")
+        newsfeed_post.post_content = f"League {self.league_name} has been completed! Congratulations to the winners!"
+        newsfeed_post.save()
 
 # League_Status 모델
 class LeagueStatus(models.Model):
