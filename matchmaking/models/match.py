@@ -129,28 +129,65 @@ class Match(TimeStampedModel):
 
     def start_match(self):
         """
-        매치 시작 시 뉴스피드 업데이트
+        매치 시작 시 뉴스피드 업데이트 및 팔로워들에게 알림 전송
         """
         self.status = 'ongoing'
         self.save()
 
-        # 뉴스피드 업데이트
+        # 뉴스피드 업데이트 (매치 참여자들의 팔로워들에게 전송)
+        participants = self.participants.all()  # 매치에 참가한 모든 사용자
+        for participant in participants:
+            followers = participant.user.followers.all()  # 각 참가자의 팔로워들 가져오기
+            for follower in followers:
+                newsfeed_post = NewsfeedPost.objects.create(
+                    newsfeed=follower.newsfeed,
+                    post_type="match",
+                    post_id=self.id,
+                    post_content=f"{participant.user.username}님이 방금 매치를 시작했습니다."
+                )
+                MatchPost.objects.create(
+                    match=self,
+                    created_by=participant.user,
+                    post_content=f"{participant.user.username}님이 방금 매치를 시작했습니다.",
+                    newsfeed_post=newsfeed_post
+                )
+
+        # 기존 뉴스피드 포스트 업데이트 (자신의 뉴스피드에도 업데이트)
         newsfeed_post = NewsfeedPost.objects.get(post_id=self.id, post_type="match")
         newsfeed_post.post_content = f"Match started at {self.sports_ground.name}"
-        newsfeed_post.pinned = True  # 매치가 시작되면 뉴스피드 상단에 고정
+        newsfeed_post.pinned = True
         newsfeed_post.save()
-
+        
+        
     def complete_match(self):
         """
-        매치가 완료될 때 뉴스피드에 업데이트.
+        매치가 완료될 때 뉴스피드에 업데이트 및 팔로워들에게 알림 전송
         """
         self.status = 'completed'
         self.save()
 
-        # 뉴스피드 포스트 업데이트
+        # 뉴스피드 업데이트 (매치 참여자들의 팔로워들에게 전송)
+        participants = self.participants.all()  # 매치에 참가한 모든 사용자
+        for participant in participants:
+            followers = participant.user.followers.all()  # 각 참가자의 팔로워들 가져오기
+            for follower in followers:
+                newsfeed_post = NewsfeedPost.objects.create(
+                    newsfeed=follower.newsfeed,
+                    post_type="match",
+                    post_id=self.id,
+                    post_content=f"{participant.user.username}님의 매치가 방금 끝났습니다."
+                )
+                MatchPost.objects.create(
+                    match=self,
+                    created_by=participant.user,
+                    post_content=f"{participant.user.username}님의 매치가 방금 끝났습니다.",
+                    newsfeed_post=newsfeed_post
+                )
+
+        # 기존 뉴스피드 포스트 업데이트 (자신의 뉴스피드에도 업데이트)
         newsfeed_post = NewsfeedPost.objects.get(post_id=self.id, post_type="match")
         newsfeed_post.post_content = f"Match completed. Final score: {self.score.home_score} - {self.score.away_score}"
-        newsfeed_post.pinned = False  # 매치가 완료되면 고정 해제
+        newsfeed_post.pinned = False
         newsfeed_post.save()
         
 class WinningMethod(models.Model):

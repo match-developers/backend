@@ -8,6 +8,7 @@ from .models.match import Match, MatchEvent, TeamPlayer, PressConference, TeamTa
 from .models.team import TeamPlayer
 from .serializers import MatchSerializer, MatchEventSerializer, TeamPlayerSerializer, PlayerReviewSerializer, GroundReviewSerializer, PressConferenceSerializer
 from accounts.models.users import User
+from newsfeed.models.newsfeed import Newsfeed, NewsfeedPost
 
 class CreateMatchView(APIView):
     permission_classes = [IsAuthenticated]
@@ -162,6 +163,21 @@ class JoinMatchView(APIView):
             # Public match, join immediately
             team_player = TeamPlayer.objects.create(user=user, team=None)  # Assign teams later
             match.participants.add(team_player)
+            match.save()
+
+            # 유저의 팔로워 목록 가져오기
+            followers = user.followers.all()
+
+            # 팔로워들의 뉴스피드에 해당 매치 포스트 추가
+            for follower_id in followers:
+                follower_newsfeed = Newsfeed.objects.get(user_id=follower_id)
+                NewsfeedPost.objects.create(
+                    newsfeed=follower_newsfeed,
+                    post_type="match",
+                    post_id=match.id,
+                    post_content=f"{user.username} joined a match at {match.sports_ground.name}."
+                )
+
             return Response({"message": "Successfully joined the match."}, status=status.HTTP_200_OK)
         
 class ManageJoinRequestView(APIView):

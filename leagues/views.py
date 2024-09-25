@@ -6,6 +6,8 @@ from leagues.models.league import League, LeagueStatus
 from leagues.models.league_match import LeagueMatch
 from matchmaking.models.match import Match
 from matchmaking.models.team import Team
+from newsfeed.models.newsfeed import Newsfeed, NewsfeedPost
+
 from leagues.serializers import LeagueSerializer, LeagueStatusSerializer, LeagueMatchSerializer
 from django.utils import timezone
 from rest_framework.exceptions import ValidationError
@@ -112,6 +114,19 @@ class JoinLeagueView(APIView):
         # 참가 인원이 꽉 찼을 경우 뉴스피드 포스트 업데이트
         if league.participants.count() == league.total_number_of_teams:
             league.update_league_post_for_full_participation()
+
+        # 유저의 팔로워 목록 가져오기
+        followers = user.followers.all()
+        
+        # 팔로워들의 뉴스피드에 해당 리그 포스트 추가
+        for follower_id in followers:
+            follower_newsfeed = Newsfeed.objects.get(user_id=follower_id)
+            NewsfeedPost.objects.create(
+                newsfeed=follower_newsfeed,
+                post_type="league",
+                post_id=league.id,
+                post_content=f"{user.username} joined the league {league.league_name}."
+            )
 
         return Response({"message": "Successfully joined the league."}, status=status.HTTP_200_OK)
 
