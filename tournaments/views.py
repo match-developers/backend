@@ -20,7 +20,12 @@ class TournamentCreateView(APIView):
             for i in range(1, tournament.max_teams + 1):
                 team = Team.objects.create(name=f"Team {i}", tournament=tournament)
                 tournament.participants.add(team)
+            
             tournament.save()
+
+            # 포스트 생성
+            tournament.create_tournament_post()
+
             return Response({
                 "message": "Tournament created successfully.",
                 "tournament": TournamentSerializer(tournament).data
@@ -106,6 +111,10 @@ class JoinTournamentView(APIView):
             tournament.participants.add(team)
 
         tournament.save()
+
+        # 참가 인원이 꽉 찼다면 포스트 업데이트
+        tournament.update_tournament_post_on_full_participation()
+
         return Response({"message": "Successfully joined the tournament."}, status=status.HTTP_200_OK)
 
 
@@ -125,6 +134,10 @@ class MatchCompleteView(APIView):
             if not remaining_matches.exists():
                 tournament.advance_round()  # 다음 라운드로 진행
                 tournament.save()
+
+                # 포스트 업데이트
+                tournament.update_tournament_post_on_round_completion()
+
                 return Response({"message": "Tournament advanced to the next round."}, status=status.HTTP_200_OK)
             
             return Response({"message": "Match completed successfully."}, status=status.HTTP_200_OK)

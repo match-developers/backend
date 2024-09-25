@@ -4,6 +4,9 @@ from django.db import models
 from accounts.models.users import User, UserStatistics
 from matchmaking.models.match import Match, WinningMethod
 from matchmaking.models.team import Team, TeamPlayer
+from newsfeed.models.newsfeed import NewsfeedPost
+from newsfeed.models.tournament_post import TournamentPost
+
 
 class Tournament(models.Model):
     TOURNAMENT_TYPES = [
@@ -93,6 +96,51 @@ class Tournament(models.Model):
 
         return True
     
+    # post creation methods
+    def create_tournament_post(self):
+        """
+        토너먼트 생성 시, 뉴스피드에 포스트를 생성하는 메서드.
+        """
+        # 뉴스피드 포스트 생성
+        newsfeed_post = NewsfeedPost.objects.create(
+            newsfeed=self.organizer.newsfeed,  # 토너먼트 주최자의 뉴스피드에 추가
+            post_type="tournament",
+            post_id=self.id,
+            post_content=f"Tournament {self.tournament_name} has been created! Join now!"
+        )
+
+        # 토너먼트 포스트 생성
+        TournamentPost.objects.create(
+            tournament=self,
+            created_by=self.organizer,
+            post_content=f"Tournament {self.tournament_name} has been created!",
+            newsfeed_post=newsfeed_post
+        )
+
+    def update_tournament_post_on_full_participation(self):
+        """
+        토너먼트 참가 인원이 꽉 찼을 때 뉴스피드 포스트 업데이트
+        """
+        if self.participants.count() >= self.max_teams:  # 모든 팀이 참여했을 때
+            newsfeed_post = NewsfeedPost.objects.get(post_id=self.id, post_type="tournament")
+            newsfeed_post.post_content = f"Tournament {self.tournament_name} is now full! The games will begin soon."
+            newsfeed_post.save()
+
+    def update_tournament_post_on_round_completion(self):
+        """
+        각 라운드가 완료되었을 때 뉴스피드 포스트 업데이트
+        """
+        newsfeed_post = NewsfeedPost.objects.get(post_id=self.id, post_type="tournament")
+        newsfeed_post.post_content = f"Round {self.current_round} of Tournament {self.tournament_name} is now complete!"
+        newsfeed_post.save()
+
+    def update_tournament_post_on_completion(self):
+        """
+        토너먼트가 완료되었을 때 최종 결과를 뉴스피드 포스트로 업데이트
+        """
+        newsfeed_post = NewsfeedPost.objects.get(post_id=self.id, post_type="tournament")
+        newsfeed_post.post_content = f"Tournament {self.tournament_name} has been completed! Congratulations to the winners!"
+        newsfeed_post.save()
 class TournamentStatus(models.Model):
     ROUND_CHOICES = [
         ('16강', 'Round of 16'),
