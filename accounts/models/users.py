@@ -66,29 +66,66 @@ class User(AbstractBaseUser, PermissionsMixin):
 class UserStatistics(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)  # User와 1:1 관계
 
-    # 경기 관련 필드 (Match 모델과 연결)
-    mp = models.IntegerField(default=0)
-    wins = models.IntegerField(default=0)
-    draws = models.IntegerField(default=0)
-    losses = models.IntegerField(default=0)
-    points_scored = models.IntegerField(default=0)
+    # 경기 관련 필드 (Match 모델과 연동)
+    mp = models.IntegerField(default=0)  # 총 경기 수 (자동 계산)
+    wins = models.IntegerField(default=0)  # 승리 수
+    draws = models.IntegerField(default=0)  # 무승부 수
+    losses = models.IntegerField(default=0)  # 패배 수
+    points_scored = models.IntegerField(default=0)  # 득점
 
     # 매너, 성과, 리뷰
-    manner = models.DecimalField(max_digits=3, decimal_places=2, default=0.00)
-    performance = models.DecimalField(max_digits=3, decimal_places=2, default=0.00)
-    reviews = models.ForeignKey(PlayerReview, on_delete=models.CASCADE, null=True, blank=True)
+    manner = models.DecimalField(max_digits=3, decimal_places=2, default=0.00)  # 매너 점수 (0.00~5.00)
+    performance = models.DecimalField(max_digits=3, decimal_places=2, default=0.00)  # 경기 성과 점수 (0.00~5.00)
+    reviews = models.ForeignKey(PlayerReview, on_delete=models.CASCADE, null=True, blank=True)  # 리뷰
 
     # 클럽, 리그, 토너먼트 활동
-    current_club = models.ForeignKey(Club, on_delete=models.SET_NULL, null=True, blank=True)
-    previous_clubs = models.ManyToManyField(Club, related_name="previous_clubs", blank=True)
-    current_league = models.ForeignKey(League, on_delete=models.SET_NULL, null=True, blank=True)
-    current_tournament = models.ForeignKey(Tournament, on_delete=models.SET_NULL, null=True, blank=True)
+    current_club = models.ForeignKey(Club, on_delete=models.SET_NULL, null=True, blank=True)  # 현재 클럽
+    previous_clubs = models.ManyToManyField(Club, related_name="previous_clubs", blank=True)  # 이전 클럽 목록
+    current_league = models.ForeignKey(League, on_delete=models.SET_NULL, null=True, blank=True)  # 현재 리그
+    current_tournament = models.ForeignKey(Tournament, on_delete=models.SET_NULL, null=True, blank=True)  # 현재 토너먼트
 
     # 플레이스타일 테스트 결과
-    playstyle = models.CharField(max_length=255, blank=True, null=True)
+    playstyle = models.CharField(max_length=255, blank=True, null=True)  # 플레이스타일
 
     def __str__(self):
         return f"{self.user.username} - Statistics"
+
+    def update_match_stats(self, match_result, points):
+        """
+        경기 결과에 따라 유저의 경기 통계를 업데이트하는 메서드.
+        match_result: 'win', 'draw', 'loss' 중 하나.
+        points: 해당 경기에서 유저가 득점한 포인트.
+        """
+        self.mp += 1  # 총 경기 수 1 증가
+        self.points_scored += points  # 득점 업데이트
+
+        if match_result == 'win':
+            self.wins += 1
+        elif match_result == 'draw':
+            self.draws += 1
+        elif match_result == 'loss':
+            self.losses += 1
+
+        self.save()
+
+    def update_performance_and_manner(self, performance_score, manner_score):
+        """
+        유저의 성과 및 매너 점수를 업데이트하는 메서드.
+        performance_score: 경기 성과 점수 (0~5)
+        manner_score: 매너 점수 (0~5)
+        """
+        self.performance = (self.performance * (self.mp - 1) + performance_score) / self.mp  # 성과 점수 평균 계산
+        self.manner = (self.manner * (self.mp - 1) + manner_score) / self.mp  # 매너 점수 평균 계산
+        self.save()
+
+    def transfer_club(self, new_club):
+        """
+        유저가 클럽을 이동할 때 호출되는 메서드.
+        """
+        if self.current_club:
+            self.previous_clubs.add(self.current_club)  # 이전 클럽 목록에 추가
+        self.current_club = new_club  # 새로운 클럽 설정
+        self.save()
 
 
 class PlaystyleTest(models.Model):

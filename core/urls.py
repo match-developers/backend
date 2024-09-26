@@ -14,20 +14,18 @@ Including another URLconf
     1. Import the include() function: from django.urls import include, path
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
-
-# core/urls.py
-
 from django.contrib import admin
 from django.urls import path, include
+
 from matchmaking.views import CreateMatchView, MatchDetailView, MatchUpdateView, ManageMatchView, MatchStartView, MatchCompleteView, SearchMatchView, JoinMatchView, ManageJoinRequestView, MatchEventUpdateView, SubmitReviewView
+from newsfeed.views import NewsfeedView, MatchPostDetailView, LeaguePostDetailView, TournamentPostDetailView, TransferPostDetailView, LikePostView, CommentPostView, SharePostView
 
 from leagues.views import LeagueCreateView, LeagueDetailView, LeagueUpdateView, LeagueDeleteView, JoinLeagueView, LeagueMatchCompleteView
-
 from tournaments.views import TournamentCreateView, TournamentDetailView, TournamentUpdateView, TournamentDeleteView, JoinTournamentView, MatchCompleteView
-    # newsfeed/urls.py
 
 from django.urls import path
-from newsfeed.views import NewsfeedView, MatchPostDetailView, LeaguePostDetailView, TournamentPostDetailView, TransferPostDetailView, LikePostView, CommentPostView, SharePostView
+from clubs.views import ClubProfileView, FollowClubView, JoinOrQuitClubView, ManageClubMemberView, CreateLineupView, ManageTacticView
+
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -66,4 +64,23 @@ urlpatterns = [
     path('newsfeed/post/<int:post_id>/like/', LikePostView.as_view(), name='like_post'),
     path('newsfeed/post/<int:post_id>/comment/', CommentPostView.as_view(), name='comment_post'),
     path('newsfeed/post/<int:post_id>/share/', SharePostView.as_view(), name='share_post'),
+    
+        # 클럽 프로필 조회
+    path('clubs/<int:club_id>/', ClubProfileView.as_view(), name='club-profile'),
+
+    # 클럽 팔로우/언팔로우
+    path('clubs/<int:club_id>/follow/', FollowClubView.as_view(), name='club-follow'),
+
+    # 클럽 가입 요청 / 탈퇴
+    path('clubs/<int:club_id>/join-or-quit/', JoinOrQuitClubView.as_view(), name='club-join-or-quit'),
+
+    # 클럽 멤버 권한 관리 및 요청 관리
+    path('clubs/<int:club_id>/manage-member/<int:member_id>/<str:action>/', ManageClubMemberView.as_view(), name='club-manage-member'),
+
+    # 라인업 생성 및 포메이션 지정
+    path('clubs/<int:club_id>/create-lineup/', CreateLineupView.as_view(), name='club-create-lineup'),
+
+    # 택틱 관리 (생성 및 삭제)
+    path('clubs/<int:club_id>/tactics/', ManageTacticView.as_view(), name='club-manage-tactic'),
+    path('clubs/<int:club_id>/tactics/<int:tactic_id>/', ManageTacticView.as_view(), name='club-delete-tactic'),
 ]
