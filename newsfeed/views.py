@@ -2,6 +2,13 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 from django.shortcuts import get_object_or_404
+from django.db import models
+from django.contrib.gis.db.models.functions import Distance  # GeoDjango distance function for location-based queries
+
+from matchmaking.models.match import Match
+from tournaments.models.tournament import Tournament
+from leagues.models.league import League
+
 from newsfeed.models.newsfeed import Newsfeed, NewsfeedPost
 from newsfeed.models.match_post import MatchPost
 from newsfeed.models.league_post import LeaguePost
@@ -17,12 +24,56 @@ class NewsfeedView(APIView):
     def get(self, request):
         user = request.user
         try:
+            # 유저의 뉴스피드 가져오기
             newsfeed = Newsfeed.objects.get(user=user)
         except Newsfeed.DoesNotExist:
             return Response({"error": "No newsfeed found for this user"}, status=status.HTTP_404_NOT_FOUND)
 
-        posts = newsfeed.posts.all()
-        serializer = NewsfeedPostSerializer(posts, many=True)
+        # 팔로우한 유저들과 클럽 가져오기
+        followed_users = user.following.all()
+        followed_clubs = user.followed_clubs.all()  # 팔로우한 클럽이 있다고 가정
+
+        # 위치 기반 필터링을 위한 위치 정보
+        user_location = user.location  # 유저의 위치 정보
+
+        # 관련된 뉴스피드 포스트 필터링
+        posts = NewsfeedPost.objects.filter(
+            models.Q(creator=user) |  # 유저가 생성한 포스트
+            models.Q(creator__in=followed_users) |  # 유저가 팔로우한 사람이 생성한 포스트
+            models.Q(match__participants__user=user) |  # 유저가 참가한 매치 포스트
+            models.Q(match__participants__user__in=followed_users) |  # 팔로우한 사람이 참가한 매치 포스트
+            models.Q(league__participants__user=user) |  # 유저가 참가한 리그 포스트
+            models.Q(league__participants__user__in=followed_users) |  # 팔로우한 사람이 참가한 리그 포스트
+            models.Q(tournament__participants__user=user) |  # 유저가 참가한 토너먼트 포스트
+            models.Q(tournament__participants__user__in=followed_users) |  # 팔로우한 사람이 참가한 토너먼트 포스트
+            models.Q(match__participants__club__in=followed_clubs) |  # 팔로우한 클럽의 매치 포스트
+            models.Q(league__participants__club__in=followed_clubs) |  # 팔로우한 클럽의 리그 포스트
+            models.Q(tournament__participants__club__in=followed_clubs)  # 팔로우한 클럽의 토너먼트 포스트
+        ).distinct()
+
+        # 가까운 지역의 매치, 리그, 토너먼트 포스트 필터링
+        nearby_matches = Match.objects.annotate(
+            distance=Distance('location', user_location)
+        ).filter(distance__lte=5000)  # 5km 이내의 매치
+        nearby_leagues = League.objects.annotate(
+            distance=Distance('location', user_location)
+        ).filter(distance__lte=5000)  # 5km 이내의 리그
+        nearby_tournaments = Tournament.objects.annotate(
+            distance=Distance('location', user_location)
+        ).filter(distance__lte=5000)  # 5km 이내의 토너먼트
+
+        # 위치 기반의 포스트도 필터링된 posts에 포함
+        nearby_posts = NewsfeedPost.objects.filter(
+            models.Q(match__in=nearby_matches) |
+            models.Q(league__in=nearby_leagues) |
+            models.Q(tournament__in=nearby_tournaments)
+        ).distinct()
+
+        # 최종 포스트 리스트: 필터링된 포스트 + 위치 기반 포스트
+        all_posts = posts.union(nearby_posts)
+
+        # 직렬화하여 응답 반환
+        serializer = NewsfeedPostSerializer(all_posts, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
 

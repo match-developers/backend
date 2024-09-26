@@ -1,8 +1,8 @@
-# accounts/serializers.py
-
 from rest_framework import serializers
 from django.contrib.auth import authenticate
-from .models import User
+
+from newsfeed.models.newsfeed import NewsfeedPost
+from .models.users import User, UserStatistics, PlaystyleTest
 
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
@@ -46,3 +46,45 @@ class SocialLoginSerializer(serializers.Serializer):
         if user:
             return user
         raise serializers.ValidationError("Invalid social login credentials.")
+    
+class NewsfeedPostSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = NewsfeedPost
+        fields = ['id', 'post_type', 'post_content', 'created_at']
+        
+class UserStatisticsSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = UserStatistics
+        fields = ['mp', 'wins', 'draws', 'losses', 'points_scored', 'manner', 'performance', 
+                  'current_club', 'previous_clubs', 'current_league', 'current_tournament', 'playstyle']
+        
+class PlaystyleTestSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = PlaystyleTest
+        fields = ['questions', 'result', 'taken_at']
+        
+        
+class FollowUserSerializer(serializers.ModelSerializer):
+    """
+    유저의 팔로우/팔로잉 정보를 직렬화하는 시리얼라이저.
+    """
+    followers_count = serializers.SerializerMethodField()
+    following_count = serializers.SerializerMethodField()
+    is_following = serializers.SerializerMethodField()
+
+    class Meta:
+        model = User
+        fields = ['id', 'username', 'profile_photo', 'bio', 'followers_count', 'following_count', 'is_following']
+
+    def get_followers_count(self, obj):
+        return obj.followers.count()
+
+    def get_following_count(self, obj):
+        return obj.following.count()
+
+    def get_is_following(self, obj):
+        # 현재 요청한 유저가 해당 유저를 팔로우하고 있는지 확인
+        request = self.context.get('request')
+        if request and hasattr(request, 'user'):
+            return obj.followers.filter(id=request.user.id).exists()
+        return False
