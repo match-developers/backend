@@ -2,7 +2,6 @@ from rest_framework import serializers
 from sportsgrounds.models.sports_ground import SportsGround, Booking
 from sportsgrounds.models.facilities import Facilities, TimeSlot
 from matchmaking.models.match import Match
-from accounts.models.users import User
 from newsfeed.models.newsfeed import NewsfeedPost
 
 
