@@ -115,6 +115,19 @@ class FollowSportsGroundView(APIView):
             sports_ground.follow_ground(user)
             return Response({"message": f"Followed {sports_ground.name}."}, status=status.HTTP_200_OK)
         
+class UnfollowSportsGroundView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request, ground_id):
+        sports_ground = get_object_or_404(SportsGround, id=ground_id)
+        user = request.user
+
+        if user in sports_ground.followers.all():
+            sports_ground.unfollow_ground(user)
+            return Response({"message": f"Unfollowed {sports_ground.name}."}, status=status.HTTP_200_OK)
+        else:
+            return Response({"error": "You are not following this ground."}, status=status.HTTP_400_BAD_REQUEST)
+        
 class FacilityListView(APIView):
     def get(self, request, ground_id):
         try:

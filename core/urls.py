@@ -84,7 +84,7 @@ urlpatterns = [
     path('sportsgrounds/<int:ground_id>/facilities/', views.FacilityListView.as_view(), name='facility-list'),  # 특정 스포츠 그라운드 내 시설 목록 조회
     path('sportsgrounds/<int:ground_id>/matches/', views.SportsGroundMatchListView.as_view(), name='sportsground-matches'),  # 특정 스포츠 그라운드에서 발생한 매치 목록 조회
     path('sportsgrounds/<int:ground_id>/follow/', views.FollowSportsGroundView.as_view(), name='sportsground-follow'),  # 스포츠 그라운드 팔로우
-    path('sportsgrounds/<int:ground_id>/unfollow/', views.FollowSportsGroundView.as_view(), name='sportsground-unfollow'),  # 스포츠 그라운드 언팔로우
+    path('sportsgrounds/<int:ground_id>/unfollow/', views.UnfollowSportsGroundView.as_view(), name='sportsground-unfollow'),
 
     # 시설 타임슬롯 조회 URL
     path('facilities/<int:facility_id>/timeslots/', views.FacilityTimeSlotView.as_view(), name='facility-timeslot'),  # 특정 시설의 타임 슬롯 목록 조회
