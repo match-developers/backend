@@ -22,6 +22,7 @@ from model_utils.models import TimeStampedModel
 
 # Match 상태를 나타내는 choices (예정됨, 진행 중, 완료됨 등)
 STATUS_CHOICES = [
+    ("pending", "Pending")
     ("scheduled", "Scheduled"),
     ("ongoing", "Ongoing"),
     ("completed", "Completed"),
@@ -51,6 +52,16 @@ class Match(TimeStampedModel):
     @property
     def available_spots(self):
         return self.total_spots - self.participants.count()
+
+    def prevent_overlap(self, user):
+        """Prevent user from joining multiple matches at the same time"""
+        ongoing_matches = Match.objects.filter(
+            participants__user=user,
+            start_time__lt=self.start_time + self.duration,
+            start_time__gt=self.start_time - self.duration,
+        )
+        if ongoing_matches.exists():
+            raise ValidationError("You cannot join another match that overlaps with your current match.")
 
     def assign_teams(self):
         if self.match_type == 'club':
@@ -90,7 +101,7 @@ class Match(TimeStampedModel):
     @classmethod
     def create_match(cls, creator, sports_ground, facility, price, start_time, duration, match_type, total_spots, league=None, tournament=None, winning_method=None):
         """
-        매치 생성 메서드
+        매치 생성 메서드 (타임 슬롯을 기반으로 매치 생성)
         """
         match = cls.objects.create(
             creator=creator,
@@ -109,24 +120,6 @@ class Match(TimeStampedModel):
         match.create_match_post()
         return match
 
-    def create_match_post(self):
-        """
-        매치 생성 시, 매치 포스트를 뉴스피드에 생성하는 메서드.
-        """
-        newsfeed_post = NewsfeedPost.objects.create(
-            newsfeed=self.creator.newsfeed,  # 매치 생성자의 뉴스피드에 추가
-            post_type="match",
-            post_id=self.id,
-        )
-
-        # 매치 포스트 생성
-        MatchPost.objects.create(
-            match=self,
-            created_by=self.creator,
-            post_content=f"Match scheduled at {self.sports_ground.name}",
-            newsfeed_post=newsfeed_post
-        )
-
     def start_match(self):
         """
         매치 시작 시 뉴스피드 업데이트 및 팔로워들에게 알림 전송
@@ -134,10 +127,9 @@ class Match(TimeStampedModel):
         self.status = 'ongoing'
         self.save()
 
-        # 뉴스피드 업데이트 (매치 참여자들의 팔로워들에게 전송)
-        participants = self.participants.all()  # 매치에 참가한 모든 사용자
+        participants = self.participants.all()
         for participant in participants:
-            followers = participant.user.followers.all()  # 각 참가자의 팔로워들 가져오기
+            followers = participant.user.followers.all()
             for follower in followers:
                 newsfeed_post = NewsfeedPost.objects.create(
                     newsfeed=follower.newsfeed,
@@ -152,24 +144,16 @@ class Match(TimeStampedModel):
                     newsfeed_post=newsfeed_post
                 )
 
-        # 기존 뉴스피드 포스트 업데이트 (자신의 뉴스피드에도 업데이트)
-        newsfeed_post = NewsfeedPost.objects.get(post_id=self.id, post_type="match")
-        newsfeed_post.post_content = f"Match started at {self.sports_ground.name}"
-        newsfeed_post.pinned = True
-        newsfeed_post.save()
-        
-        
     def complete_match(self):
         """
-        매치가 완료될 때 뉴스피드에 업데이트 및 팔로워들에게 알림 전송
+        매치 완료 시 뉴스피드 업데이트 및 팔로워들에게 알림 전송
         """
         self.status = 'completed'
         self.save()
 
-        # 뉴스피드 업데이트 (매치 참여자들의 팔로워들에게 전송)
-        participants = self.participants.all()  # 매치에 참가한 모든 사용자
+        participants = self.participants.all()
         for participant in participants:
-            followers = participant.user.followers.all()  # 각 참가자의 팔로워들 가져오기
+            followers = participant.user.followers.all()
             for follower in followers:
                 newsfeed_post = NewsfeedPost.objects.create(
                     newsfeed=follower.newsfeed,
@@ -184,9 +168,9 @@ class Match(TimeStampedModel):
                     newsfeed_post=newsfeed_post
                 )
 
-        # 기존 뉴스피드 포스트 업데이트 (자신의 뉴스피드에도 업데이트)
+        # 기존 뉴스피드 포스트 업데이트
         newsfeed_post = NewsfeedPost.objects.get(post_id=self.id, post_type="match")
-        newsfeed_post.post_content = f"Match completed. Final score: {self.score.home_score} - {self.score.away_score}"
+        newsfeed_post.post_content = f"Match completed."
         newsfeed_post.pinned = False
         newsfeed_post.save()
         

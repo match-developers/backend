@@ -8,7 +8,7 @@ class Club(models.Model):
     bio = models.TextField(null=True, blank=True)  # 클럽 소개
     member_number = models.IntegerField(default=0)  # 멤버 수 (자동 계산됨)
     followers = models.JSONField(null=True, blank=True)  # 팔로워 목록 (JSON 형태)
-    owner = models.ForeignKey(User, related_name="clubs_owned", on_delete=models.CASCADE)  # 클럽 소유자 (User 테이블과 연결)
+    owner = models.ForeignKey(User, related_name="owned_club", on_delete=models.CASCADE)  # 클럽 소유자 (User 테이블과 연결)
         
     # 클럽 내에서 멤버별 권한을 관리하기 위한 필드 (JSON 형태로 저장)
     member_permissions = models.JSONField(default=dict, blank=True)

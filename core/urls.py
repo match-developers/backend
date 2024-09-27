@@ -23,8 +23,8 @@ from newsfeed.views import NewsfeedView, MatchPostDetailView, LeaguePostDetailVi
 from leagues.views import LeagueCreateView, LeagueDetailView, LeagueUpdateView, LeagueDeleteView, JoinLeagueView, LeagueMatchCompleteView
 from tournaments.views import TournamentCreateView, TournamentDetailView, TournamentUpdateView, TournamentDeleteView, JoinTournamentView, MatchCompleteView
 
-from django.urls import path
 from clubs.views import ClubProfileView, FollowClubView, JoinOrQuitClubView, ManageClubMemberView, CreateLineupView, ManageTacticView
+from sportsgrounds import views
 
 
 urlpatterns = [
@@ -67,20 +67,33 @@ urlpatterns = [
     
         # 클럽 프로필 조회
     path('clubs/<int:club_id>/', ClubProfileView.as_view(), name='club-profile'),
-
     # 클럽 팔로우/언팔로우
     path('clubs/<int:club_id>/follow/', FollowClubView.as_view(), name='club-follow'),
-
     # 클럽 가입 요청 / 탈퇴
     path('clubs/<int:club_id>/join-or-quit/', JoinOrQuitClubView.as_view(), name='club-join-or-quit'),
-
     # 클럽 멤버 권한 관리 및 요청 관리
     path('clubs/<int:club_id>/manage-member/<int:member_id>/<str:action>/', ManageClubMemberView.as_view(), name='club-manage-member'),
-
     # 라인업 생성 및 포메이션 지정
     path('clubs/<int:club_id>/create-lineup/', CreateLineupView.as_view(), name='club-create-lineup'),
-
     # 택틱 관리 (생성 및 삭제)
     path('clubs/<int:club_id>/tactics/', ManageTacticView.as_view(), name='club-manage-tactic'),
     path('clubs/<int:club_id>/tactics/<int:tactic_id>/', ManageTacticView.as_view(), name='club-delete-tactic'),
+    
+    # 스포츠 그라운드 관련 URL
+    path('sportsgrounds/', views.SportsGroundListView.as_view(), name='sportsground-list'),  # 모든 스포츠 그라운드 목록 조회
+    path('sportsgrounds/<int:ground_id>/', views.SportsGroundDetailView.as_view(), name='sportsground-detail'),  # 특정 스포츠 그라운드 상세 조회
+    path('sportsgrounds/<int:ground_id>/facilities/', views.FacilityListView.as_view(), name='facility-list'),  # 특정 스포츠 그라운드 내 시설 목록 조회
+    path('sportsgrounds/<int:ground_id>/matches/', views.SportsGroundMatchListView.as_view(), name='sportsground-matches'),  # 특정 스포츠 그라운드에서 발생한 매치 목록 조회
+    path('sportsgrounds/<int:ground_id>/follow/', views.FollowSportsGroundView.as_view(), name='sportsground-follow'),  # 스포츠 그라운드 팔로우
+    path('sportsgrounds/<int:ground_id>/unfollow/', views.UnfollowSportsGroundView.as_view(), name='sportsground-unfollow'),  # 스포츠 그라운드 언팔로우
+
+    # 시설 관련 URL
+    path('facilities/<int:facility_id>/timeslots/', views.FacilityTimeSlotView.as_view(), name='facility-timeslot'),  # 특정 시설의 타임 슬롯 목록 조회
+
+    # 예약 관련 URL
+    path('bookings/', views.BookingListView.as_view(), name='booking-list'),  # 예약 목록 조회
+    path('bookings/<int:booking_id>/', views.BookingDetailView.as_view(), name='booking-detail'),  # 특정 예약 상세 정보 조회
+    path('bookings/<int:booking_id>/confirm/', views.ConfirmBookingView.as_view(), name='confirm-booking'),  # 예약 확정
+    path('bookings/<int:booking_id>/decline/', views.DeclineBookingView.as_view(), name='decline-booking'),  # 예약 거절
+    path('bookings/<int:booking_id>/cancel/', views.CancelBookingView.as_view(), name='cancel-booking'),  # 예약 취소
 ]

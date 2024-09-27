@@ -29,9 +29,10 @@ class NewsfeedView(APIView):
         except Newsfeed.DoesNotExist:
             return Response({"error": "No newsfeed found for this user"}, status=status.HTTP_404_NOT_FOUND)
 
-        # 팔로우한 유저들과 클럽 가져오기
+        # 팔로우한 유저, 클럽, 그리고 스포츠 그라운드 가져오기
         followed_users = user.following.all()
         followed_clubs = user.followed_clubs.all()  # 팔로우한 클럽이 있다고 가정
+        followed_grounds = user.followed_grounds.all()  # 팔로우한 스포츠 그라운드 목록
 
         # 위치 기반 필터링을 위한 위치 정보
         user_location = user.location  # 유저의 위치 정보
@@ -48,7 +49,8 @@ class NewsfeedView(APIView):
             models.Q(tournament__participants__user__in=followed_users) |  # 팔로우한 사람이 참가한 토너먼트 포스트
             models.Q(match__participants__club__in=followed_clubs) |  # 팔로우한 클럽의 매치 포스트
             models.Q(league__participants__club__in=followed_clubs) |  # 팔로우한 클럽의 리그 포스트
-            models.Q(tournament__participants__club__in=followed_clubs)  # 팔로우한 클럽의 토너먼트 포스트
+            models.Q(tournament__participants__club__in=followed_clubs) |  # 팔로우한 클럽의 토너먼트 포스트
+            models.Q(match__sports_ground__in=followed_grounds)  # 팔로우한 스포츠 그라운드에서 일어나는 매치 포스트
         ).distinct()
 
         # 가까운 지역의 매치, 리그, 토너먼트 포스트 필터링
