@@ -1,12 +1,11 @@
 from django.core.exceptions import ValidationError
 from django.utils import timezone
 from django.db import models
-from accounts.models.users import User, UserStatistics
-from matchmaking.models.match import Match, WinningMethod
-from matchmaking.models.team import Team, TeamPlayer
+
+# User, Match는 문자열로 참조
+from matchmaking.models.team import Team
 from newsfeed.models.newsfeed import NewsfeedPost
 from newsfeed.models.tournament_post import TournamentPost
-
 
 class Tournament(models.Model):
     TOURNAMENT_TYPES = [
@@ -26,7 +25,7 @@ class Tournament(models.Model):
         ('결승', 'Final'),
     ]
     
-    organizer = models.ForeignKey(User, on_delete=models.CASCADE)
+    organizer = models.ForeignKey('accounts.User', on_delete=models.CASCADE)  # 문자열 참조
     tournament_name = models.CharField(max_length=255)
     description = models.TextField()
     tournament_type = models.CharField(max_length=50, choices=TOURNAMENT_TYPES, default='individual')
@@ -39,7 +38,7 @@ class Tournament(models.Model):
     current_round = models.CharField(max_length=50, choices=ROUND_CHOICES, default='16강')  # 현재 라운드
     scheduling_type = models.CharField(max_length=50, choices=SCHEDULING_TYPES, default='organizer_based')
     match_duration = models.DurationField()  # 경기 시간
-    winning_method = models.ForeignKey(WinningMethod, on_delete=models.SET_NULL, null=True, blank=True)  # 승리 조건
+    winning_method = models.ForeignKey('matchmaking.WinningMethod', on_delete=models.SET_NULL, null=True, blank=True)  # 문자열 참조
 
     def __str__(self):
         return self.tournament_name
@@ -60,7 +59,7 @@ class Tournament(models.Model):
             for i in range(0, num_teams - 1, 2):
                 home_team = teams[i]
                 away_team = teams[i + 1]
-                match = Match.objects.create(
+                match = models.get_model('matchmaking', 'Match').objects.create(  # Match를 문자열 참조
                     home_team=home_team,
                     away_team=away_team,
                     match_type='tournament',
@@ -141,6 +140,8 @@ class Tournament(models.Model):
         newsfeed_post = NewsfeedPost.objects.get(post_id=self.id, post_type="tournament")
         newsfeed_post.post_content = f"Tournament {self.tournament_name} has been completed! Congratulations to the winners!"
         newsfeed_post.save()
+
+# TournamentStatus 모델
 class TournamentStatus(models.Model):
     ROUND_CHOICES = [
         ('16강', 'Round of 16'),

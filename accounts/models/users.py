@@ -6,8 +6,8 @@ from clubs.models.clubs import Club
 from sportsgrounds.models.sports_ground import SportsGround  # 스포츠 그라운드 모델 추가
 from leagues.models.league import League
 from tournaments.models.tournament import Tournament
-from matchmaking.models.match import MatchEvent, PlayerReview
-from newsfeed.models.newsfeed import Newsfeed, NewsfeedPost
+from matchmaking.models.match import PlayerReview
+from newsfeed.models.newsfeed import NewsfeedPost
 
 
 class User(AbstractBaseUser, PermissionsMixin):

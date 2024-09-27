@@ -1,10 +1,10 @@
 from django.db import models
-from tournaments.models.tournament import Tournament, TournamentStatus
-from newsfeed.models.newsfeed import NewsfeedPost
 from accounts.models.users import User
+from newsfeed.models.newsfeed import NewsfeedPost
+from tournaments.models.tournament import TournamentStatus
 
 class TournamentPost(models.Model):
-    tournament = models.ForeignKey(Tournament, on_delete=models.CASCADE, related_name="tournament_posts")  # 관련된 토너먼트
+    tournament = models.ForeignKey('tournaments.Tournament', on_delete=models.CASCADE, related_name="tournament_posts")  # 문자열 참조 방식
     created_by = models.ForeignKey(User, on_delete=models.CASCADE)  # 포스트 작성자
     post_content = models.TextField(blank=True, null=True)  # 포스트 내용 (토너먼트 요약 등)
     created_at = models.DateTimeField(auto_now_add=True)  # 생성 시간

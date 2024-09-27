@@ -1,11 +1,12 @@
 from django.core.exceptions import ValidationError
 from django.utils import timezone
 from django.db import models
-from accounts.models.users import User, UserStatistics
-from matchmaking.models.match import Match
-from matchmaking.models.team import Team, TeamPlayer
+
+# User, Match는 문자열로 참조
+from matchmaking.models.team import Team  # Team 모델 임포트
 from newsfeed.models.newsfeed import NewsfeedPost
 from newsfeed.models.league_post import LeaguePost
+
 
 # League 모델
 class League(models.Model):
@@ -19,7 +20,7 @@ class League(models.Model):
         ('deadline_based', 'Deadline Based'),
     ]
     
-    organizer = models.ForeignKey(User, on_delete=models.CASCADE)
+    organizer = models.ForeignKey('accounts.User', on_delete=models.CASCADE)  # 문자열 참조
     league_name = models.CharField(max_length=255)
     description = models.TextField()
     league_type = models.CharField(max_length=50, choices=LEAGUE_TYPES, default='individual')
@@ -45,18 +46,17 @@ class League(models.Model):
         개인 리그일 경우 참가자를 팀으로 자동 생성.
         """
         if self.league_type == 'individual':
-            participants = list(UserStatistics.objects.filter(current_league=self))
+            participants = list(models.get_model('accounts', 'User').objects.filter(user_statistics__current_league=self))
             num_participants = len(participants)
             if num_participants % 2 != 0:
                 return []
             
-            team_size = num_participants // 2
             for i in range(0, num_participants, 2):
                 team_1 = Team.objects.create(name=f"Team {i+1}")
                 team_2 = Team.objects.create(name=f"Team {i+2}")
                 self.participants.add(team_1, team_2)
-                team_1.players.add(participants[i].user)
-                team_2.players.add(participants[i + 1].user)
+                team_1.players.add(participants[i])
+                team_2.players.add(participants[i + 1])
 
     def generate_schedule(self):
         """
@@ -73,7 +73,7 @@ class League(models.Model):
             for i in range(0, num_teams - 1, 2):
                 home_team = teams[i]
                 away_team = teams[i + 1]
-                match = Match.objects.create(
+                match = models.get_model('matchmaking', 'Match').objects.create(
                     home_team=home_team,
                     away_team=away_team,
                     match_type='league',
@@ -146,6 +146,7 @@ class League(models.Model):
         newsfeed_post.post_content = f"League {self.league_name} has been completed! Congratulations to the winners!"
         newsfeed_post.save()
 
+
 # League_Status 모델
 class LeagueStatus(models.Model):
     league = models.ForeignKey(League, on_delete=models.CASCADE)
@@ -162,6 +163,3 @@ class LeagueStatus(models.Model):
 
     def __str__(self):
         return f"{self.team.name} in {self.league.league_name} (Position: {self.current_position})"
-
-
-

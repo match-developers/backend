@@ -1,6 +1,6 @@
 from django.db import models
-from accounts.models import User  # User 모델 참조
-from clubs.models import Club  # Club 모델 참조
+from accounts.models.users import User  # User 모델 참조
+from clubs.models.clubs import Club  # Club 모델 참조
 
 class Team(models.Model):
     name = models.CharField(max_length=255)  # 팀 이름 (자동 생성)

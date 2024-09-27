@@ -2,7 +2,6 @@ from django.db import models
 from clubs.models.clubs import Club
 from leagues.models.league import League  # 리그 테이블과 연결
 from tournaments.models.tournament import Tournament  # 토너먼트 테이블과 연결
-from matchmaking.models.match import Match  # 매치 테이블과 연결
 from accounts.models.users import UserStatistics  # 유저 통계와 연결
 
 class ClubStatistics(models.Model):

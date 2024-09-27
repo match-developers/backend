@@ -1,12 +1,13 @@
 from django.db import models
-from accounts.models.users import User
 
+# User 모델에 문자열 참조 방식 사용
 class Newsfeed(models.Model):
-    user = models.ForeignKey(User, on_delete=models.CASCADE)  # 뉴스피드 소유자
-    created_at = models.DateTimeField(auto_now_add=True)  # 생성 시간
+    user = models.ForeignKey('accounts.User', on_delete=models.CASCADE)  # 문자열 참조로 User 참조
+    created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
         return f"Newsfeed of {self.user.username}"
+
 
 class NewsfeedPost(models.Model):
     NEWSFEED_POST_TYPES = [
@@ -16,15 +17,15 @@ class NewsfeedPost(models.Model):
         ('transfer', 'Transfer Post'),
     ]
 
-    newsfeed = models.ForeignKey(Newsfeed, on_delete=models.CASCADE, related_name="posts")  # 뉴스피드와 연결
-    post_type = models.CharField(max_length=50, choices=NEWSFEED_POST_TYPES)  # 포스트 유형
+    newsfeed = models.ForeignKey(Newsfeed, on_delete=models.CASCADE, related_name="posts")
+    post_type = models.CharField(max_length=50, choices=NEWSFEED_POST_TYPES)
     post_id = models.IntegerField()  # 연결된 포스트의 ID (Match, League, Tournament, Transfer 등)
-    created_at = models.DateTimeField(auto_now_add=True)  # 포스트 생성 시간
-    pinned = models.BooleanField(default=False)  # 고정 상태 여부
-    likes = models.IntegerField(default=0)  # 좋아요 수
-    comments = models.JSONField(default=list)  # 댓글 목록 (JSON 필드)
-    shares = models.IntegerField(default=0)  # 공유 수
-    edited_at = models.DateTimeField(null=True, blank=True)  # 수정된 시간
+    created_at = models.DateTimeField(auto_now_add=True)
+    pinned = models.BooleanField(default=False)
+    likes = models.IntegerField(default=0)
+    comments = models.JSONField(default=list)
+    shares = models.IntegerField(default=0)
+    edited_at = models.DateTimeField(null=True, blank=True)
 
     def __str__(self):
         return f"{self.post_type.capitalize()} Post in {self.newsfeed.user.username}'s newsfeed"

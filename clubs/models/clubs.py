@@ -1,6 +1,6 @@
 from django.db import models
-from accounts.models.users import User
-from newsfeed.models.newsfeed import Newsfeed, NewsfeedPost
+# from accounts.models.users import User  # 문자열 참조로 대체
+from newsfeed.models.newsfeed import NewsfeedPost
 
 class Club(models.Model):
     name = models.CharField(max_length=255)  # 클럽 이름
@@ -8,12 +8,12 @@ class Club(models.Model):
     bio = models.TextField(null=True, blank=True)  # 클럽 소개
     member_number = models.IntegerField(default=0)  # 멤버 수 (자동 계산됨)
     followers = models.JSONField(null=True, blank=True)  # 팔로워 목록 (JSON 형태)
-    owner = models.ForeignKey(User, related_name="owned_club", on_delete=models.CASCADE)  # 클럽 소유자 (User 테이블과 연결)
+    owner = models.ForeignKey('accounts.User', related_name="owned_club", on_delete=models.CASCADE)  # 클럽 소유자 (User 테이블과 연결)
         
     # 클럽 내에서 멤버별 권한을 관리하기 위한 필드 (JSON 형태로 저장)
     member_permissions = models.JSONField(default=dict, blank=True)
     
-        # 권한 타입을 고정된 선택지로 설정
+    # 권한 타입을 고정된 선택지로 설정
     PERMISSION_TYPES = (
         ('create_match', 'Create Match'),
         ('manage_team', 'Manage Team'),
@@ -21,16 +21,16 @@ class Club(models.Model):
         ('manage_requests', 'Manage Join Requests'),
     )
 
-    
     # Join 요청을 관리할 수 있는 필드 (리스트 형태로 요청자들을 관리)
-    join_requests = models.ManyToManyField(User, related_name="club_join_requests", blank=True)
+    join_requests = models.ManyToManyField('accounts.User', related_name="club_join_requests", blank=True)
     
     # 클럽 멤버들 (사용자가 클럽에 가입하거나 탈퇴할 때 사용)
-    members = models.ManyToManyField(User, related_name="clubs_joined", blank=True)
+    members = models.ManyToManyField('accounts.User', related_name="clubs_joined", blank=True)
+    
     # 권한 필드
-    match_creators = models.ManyToManyField(User, related_name="clubs_can_create_match", blank=True)  # 매치 생성 권한을 가진 멤버들
-    team_managers = models.ManyToManyField(User, related_name="clubs_can_manage_team", blank=True)  # 팀을 관리할 권한을 가진 멤버들
-    owner_assignees = models.ManyToManyField(User, related_name="clubs_can_assign_owner", blank=True)  # 소유자 권한을 부여할 수 있는 멤버들
+    match_creators = models.ManyToManyField('accounts.User', related_name="clubs_can_create_match", blank=True)  # 매치 생성 권한을 가진 멤버들
+    team_managers = models.ManyToManyField('accounts.User', related_name="clubs_can_manage_team", blank=True)  # 팀을 관리할 권한을 가진 멤버들
+    owner_assignees = models.ManyToManyField('accounts.User', related_name="clubs_can_assign_owner", blank=True)  # 소유자 권한을 부여할 수 있는 멤버들
 
     # 클럽 뉴스피드: 클럽이 참가하거나 생성한 매치, 리그, 토너먼트 게시물만 표시
     club_newsfeed = models.OneToOneField(
@@ -124,19 +124,3 @@ class Club(models.Model):
         """
         if user in self.join_requests.all():
             self.join_requests.remove(user)
-
-    def add_member(self, user):
-        """
-        사용자가 클럽에 가입할 때 호출되는 메서드.
-        """
-        if user not in self.members.all():
-            self.members.add(user)
-            self.save()
-
-    def remove_member(self, user):
-        """
-        사용자가 클럽에서 탈퇴할 때 호출되는 메서드.
-        """
-        if user in self.members.all():
-            self.members.remove(user)
-            self.save()

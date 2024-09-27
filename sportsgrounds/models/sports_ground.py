@@ -1,8 +1,8 @@
 from django.contrib.gis.db import models
-from matchmaking.models.match import GroundReview, Match  # 리뷰 및 매치 모델
-from accounts.models.users import User
-from newsfeed.models.newsfeed import NewsfeedPost
 from django.core.exceptions import ValidationError
+
+# User, Match, GroundReview는 문자열 참조로 처리
+from newsfeed.models.newsfeed import NewsfeedPost
 
 STATUS_CHOICES = [
     ("pending", "Pending"),
@@ -20,12 +20,12 @@ class SportsGround(models.Model):
     support = models.TextField(blank=True, null=True)
     rules = models.TextField(blank=True, null=True)
     opening_hours = models.JSONField(blank=True, null=True)
-    owner = models.ForeignKey(User, on_delete=models.CASCADE, related_name="owned_ground")
+    owner = models.ForeignKey('accounts.User', on_delete=models.CASCADE, related_name="owned_ground")  # 문자열 참조
 
-    reviews = models.ManyToManyField(GroundReview, related_name='ground_reviews', blank=True)
+    reviews = models.ManyToManyField('matchmaking.GroundReview', related_name='ground_reviews', blank=True)  # 문자열 참조
     average_rating = models.DecimalField(max_digits=3, decimal_places=2, default=0.00)
 
-    followers = models.ManyToManyField(User, related_name="followed_grounds", blank=True)
+    followers = models.ManyToManyField('accounts.User', related_name="followed_grounds", blank=True)  # 문자열 참조
 
     def __str__(self):
         return self.name
@@ -53,7 +53,7 @@ class SportsGround(models.Model):
         self.save()
 
     def get_matches(self):
-        return Match.objects.filter(sports_ground=self)
+        return models.get_model('matchmaking', 'Match').objects.filter(sports_ground=self)  # 문자열 참조
 
     def follow_ground(self, user):
         if user not in self.followers.all():
@@ -80,7 +80,7 @@ class SportsGround(models.Model):
 class Booking(models.Model):
     sports_ground = models.ForeignKey(SportsGround, on_delete=models.CASCADE, related_name="bookings")
     facility = models.ForeignKey('Facilities', on_delete=models.CASCADE, related_name="bookings")
-    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="bookings")
+    user = models.ForeignKey('accounts.User', on_delete=models.CASCADE, related_name="bookings")  # 문자열 참조
     time_slot = models.ForeignKey('TimeSlot', on_delete=models.CASCADE)
     status = models.CharField(max_length=50, choices=STATUS_CHOICES, default="pending")
 
@@ -98,7 +98,7 @@ class Booking(models.Model):
         self.time_slot.reserve(self.match)
         self.save()
 
-        pending_matches = Match.objects.filter(
+        pending_matches = models.get_model('matchmaking', 'Match').objects.filter(  # 문자열 참조
             sports_ground=self.sports_ground,
             facility=self.facility,
             time_slot=self.time_slot,

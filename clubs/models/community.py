@@ -1,6 +1,6 @@
 from django.db import models
-from clubs.models import Club
-from accounts.models import User
+from clubs.models.clubs import Club
+from accounts.models.users import User
 
 class Community(models.Model):
     club = models.ForeignKey(Club, on_delete=models.CASCADE, related_name="community_posts")  # 클럽과 1:N 관계
