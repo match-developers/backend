@@ -1,4 +1,5 @@
 import openai
+from django.apps import apps
 from django.conf import settings
 from django.contrib.contenttypes.fields import GenericRelation
 from django.contrib.postgres.fields import JSONField
@@ -13,10 +14,9 @@ from rest_framework.exceptions import ValidationError
 # from sportsgrounds.models.facilities import Facilities
 # from leagues.models.league import League
 # from tournaments.models.tournament import Tournament
-from .match import Team
+from matchmaking.models.team import Team
 from newsfeed.models.newsfeed import NewsfeedPost
 from newsfeed.models.match_post import MatchPost
-from accounts.models.users import UserStatistics  # UserStatistics 임포트 추가
 
 from model_utils.models import TimeStampedModel
 
@@ -222,8 +222,8 @@ class PressConference(models.Model):
         player_info = []
 
         for participant in self.participants.all():
-            # UserStatistics를 문자열로 참조하여 circular import 문제 해결
-            user_stats = UserStatistics.objects.get(user=participant.user)  # 직접 임포트가 아닌 문자열 참조
+            UserStatistics = apps.get_model('accounts', 'UserStatistics')  
+            user_stats = UserStatistics.objects.get(user=participant.user)
             player_info.append(
                 f"플레이어 {participant.user.username}: {user_stats.mp} 경기, {user_stats.wins} 승리, 매너 점수 {user_stats.manner}."
             )

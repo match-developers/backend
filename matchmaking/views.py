@@ -4,10 +4,7 @@ from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework.permissions import IsAuthenticated
-from .models.match import Match, MatchEvent, TeamPlayer, PressConference, TeamTalk, PlayerReview, GroundReview, SportsGround
-from .models.team import TeamPlayer
 from .serializers import MatchSerializer, MatchEventSerializer, TeamPlayerSerializer, PlayerReviewSerializer, GroundReviewSerializer, PressConferenceSerializer
-from accounts.models.users import User
 from newsfeed.models.newsfeed import Newsfeed, NewsfeedPost
 
 class CreateMatchView(APIView):
@@ -26,22 +23,22 @@ class CreateMatchView(APIView):
                 "match": MatchSerializer(match).data
             }, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-    
+
 class MatchDetailView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request, match_id, *args, **kwargs):
         try:
-            match = Match.objects.get(id=match_id)
-        except Match.DoesNotExist:
+            match = "match.Match".objects.get(id=match_id)
+        except "match.Match".DoesNotExist:
             return Response({"error": "Match not found."}, status=status.HTTP_404_NOT_FOUND)
 
         match_serializer = MatchSerializer(match)
-        events = MatchEvent.objects.filter(match=match)
+        events = "match.MatchEvent".objects.filter(match=match)
         event_serializer = MatchEventSerializer(events, many=True)
 
         # 선수 정보도 함께 반환
-        team_players = TeamPlayer.objects.filter(team__match=match)
+        team_players = "match.TeamPlayer".objects.filter(team__match=match)
         player_serializer = TeamPlayerSerializer(team_players, many=True)
 
         return Response({
@@ -49,14 +46,14 @@ class MatchDetailView(APIView):
             "events": event_serializer.data,
             "players": player_serializer.data
         }, status=status.HTTP_200_OK)
-    
+
 class MatchUpdateView(APIView):
     permission_classes = [IsAuthenticated]
 
     def put(self, request, match_id, *args, **kwargs):
         try:
-            match = Match.objects.get(id=match_id, creator=request.user)
-        except Match.DoesNotExist:
+            match = "match.Match".objects.get(id=match_id, creator=request.user)
+        except "match.Match".DoesNotExist:
             return Response({"error": "Match not found or permission denied."}, status=status.HTTP_404_NOT_FOUND)
 
         # Check if the match is accepted by a sports ground owner
@@ -74,14 +71,14 @@ class MatchUpdateView(APIView):
                 "match": MatchSerializer(match).data
             }, status=status.HTTP_200_OK)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-    
+
 class ManageMatchView(APIView):
     permission_classes = [IsAuthenticated]
 
     def post(self, request, match_id):
         try:
-            match = Match.objects.get(id=match_id, creator=request.user)
-        except Match.DoesNotExist:
+            match = "match.Match".objects.get(id=match_id, creator=request.user)
+        except "match.Match".DoesNotExist:
             return Response({"error": "Match not found or permission denied."}, status=status.HTTP_404_NOT_FOUND)
 
         action = request.data.get('action')
@@ -101,8 +98,8 @@ class MatchStartView(APIView):
 
     def post(self, request, match_id):
         try:
-            match = Match.objects.get(id=match_id, creator=request.user)
-        except Match.DoesNotExist:
+            match = "match.Match".objects.get(id=match_id, creator=request.user)
+        except "match.Match".DoesNotExist:
             return Response({"error": "Match not found or permission denied."}, status=status.HTTP_404_NOT_FOUND)
 
         if match.status == 'scheduled':
@@ -110,14 +107,14 @@ class MatchStartView(APIView):
             return Response({"message": "Match started successfully."}, status=status.HTTP_200_OK)
         else:
             return Response({"error": "Cannot start a match that is not scheduled."}, status=status.HTTP_400_BAD_REQUEST)
-        
+
 class MatchCompleteView(APIView):
     permission_classes = [IsAuthenticated]
 
     def post(self, request, match_id):
         try:
-            match = Match.objects.get(id=match_id, creator=request.user)
-        except Match.DoesNotExist:
+            match = "match.Match".objects.get(id=match_id, creator=request.user)
+        except "match.Match".DoesNotExist:
             return Response({"error": "Match not found or permission denied."}, status=status.HTTP_404_NOT_FOUND)
 
         if match.status == 'ongoing':
@@ -125,7 +122,7 @@ class MatchCompleteView(APIView):
             return Response({"message": "Match completed successfully."}, status=status.HTTP_200_OK)
         else:
             return Response({"error": "Cannot complete a match that is not ongoing."}, status=status.HTTP_400_BAD_REQUEST)
-    
+
 class SearchMatchView(APIView):
     permission_classes = [IsAuthenticated]
 
@@ -135,17 +132,17 @@ class SearchMatchView(APIView):
             return Response({"error": "Location parameter is required."}, status=status.HTTP_400_BAD_REQUEST)
         
         # Use GIS to find nearby matches
-        matches = Match.objects.filter(sports_ground__location__distance_lte=(location, 10000))  # 10km range
+        matches = "match.Match".objects.filter(sports_ground__location__distance_lte=(location, 10000))  # 10km range
         serializer = MatchSerializer(matches, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
-    
+
 class JoinMatchView(APIView):
     permission_classes = [IsAuthenticated]
 
     def post(self, request, match_id, *args, **kwargs):
         try:
-            match = Match.objects.get(id=match_id)
-        except Match.DoesNotExist:
+            match = "match.Match".objects.get(id=match_id)
+        except "match.Match".DoesNotExist:
             return Response({"error": "Match not found."}, status=status.HTTP_404_NOT_FOUND)
 
         user = request.user
@@ -161,7 +158,7 @@ class JoinMatchView(APIView):
             return Response({"message": "Request to join sent to the match owner."}, status=status.HTTP_200_OK)
         else:
             # Public match, join immediately
-            team_player = TeamPlayer.objects.create(user=user, team=None)  # Assign teams later
+            team_player = "match.TeamPlayer".objects.create(user=user, team=None)  # Assign teams later
             match.participants.add(team_player)
             match.save()
 
@@ -179,26 +176,26 @@ class JoinMatchView(APIView):
                 )
 
             return Response({"message": "Successfully joined the match."}, status=status.HTTP_200_OK)
-        
+
 class ManageJoinRequestView(APIView):
     permission_classes = [IsAuthenticated]
 
     def post(self, request, match_id, user_id, *args, **kwargs):
         try:
-            match = Match.objects.get(id=match_id, creator=request.user)
-        except Match.DoesNotExist:
+            match = "match.Match".objects.get(id=match_id, creator=request.user)
+        except "match.Match".DoesNotExist:
             return Response({"error": "Match not found or you don't have permission to manage this match."}, status=status.HTTP_404_NOT_FOUND)
 
         try:
-            requested_user = User.objects.get(id=user_id)
-        except User.DoesNotExist:
+            requested_user = "accounts.User".objects.get(id=user_id)
+        except "accounts.User".DoesNotExist:
             return Response({"error": "Requested user not found."}, status=status.HTTP_404_NOT_FOUND)
 
         action = request.data.get('action')  # 'accept' or 'deny'
         if action == 'accept':
             if requested_user in match.join_requests.all():
                 match.join_requests.remove(requested_user)
-                team_player = TeamPlayer.objects.create(user=requested_user, team=None)
+                team_player = "match.TeamPlayer".objects.create(user=requested_user, team=None)
                 match.participants.add(team_player)
                 return Response({"message": f"{requested_user.username} has been added to the match."}, status=status.HTTP_200_OK)
             else:
@@ -211,15 +208,14 @@ class ManageJoinRequestView(APIView):
             else:
                 return Response({"error": "User did not request to join this match."}, status=status.HTTP_400_BAD_REQUEST)
 
-        return Response({"error": "Invalid action."}, status=status.HTTP_400_BAD_REQUEST)
 
 class MatchEventUpdateView(APIView):
     permission_classes = [IsAuthenticated]  # 로그인된 사용자만 접근 가능
 
     def post(self, request, match_id, *args, **kwargs):
         try:
-            match = Match.objects.get(id=match_id)
-        except Match.DoesNotExist:
+            match = "match.Match".objects.get(id=match_id)
+        except "match.Match".DoesNotExist:
             return Response({"error": "Match not found."}, status=status.HTTP_404_NOT_FOUND)
         
         serializer = MatchEventSerializer(data=request.data)
@@ -236,8 +232,8 @@ class PlayerUpdateView(APIView):
 
     def post(self, request, match_id, *args, **kwargs):
         try:
-            match = Match.objects.get(id=match_id)
-        except Match.DoesNotExist:
+            match = "match.Match".objects.get(id=match_id)
+        except "match.Match".DoesNotExist:
             return Response({"error": "Match not found."}, status=status.HTTP_404_NOT_FOUND)
         
         # 교체할 선수와 교체된 선수 정보 가져오기
@@ -245,9 +241,9 @@ class PlayerUpdateView(APIView):
         out_player_id = request.data.get('out_player_id')  # 교체된 선수 ID
 
         try:
-            in_player = TeamPlayer.objects.get(id=in_player_id)
-            out_player = TeamPlayer.objects.get(id=out_player_id)
-        except TeamPlayer.DoesNotExist:
+            in_player = "match.TeamPlayer".objects.get(id=in_player_id)
+            out_player = "match.TeamPlayer".objects.get(id=out_player_id)
+        except "match.TeamPlayer".DoesNotExist:
             return Response({"error": "Player not found."}, status=status.HTTP_404_NOT_FOUND)
 
         # 교체 처리: 선발 여부 수정
@@ -257,7 +253,7 @@ class PlayerUpdateView(APIView):
         in_player.save()
 
         # 매치 이벤트 생성
-        MatchEvent.objects.create(
+        "match.MatchEvent".objects.create(
             match=match,
             event_type='substitution',
             timestamp=timezone.now(),
@@ -267,7 +263,6 @@ class PlayerUpdateView(APIView):
 
         return Response({"message": "Player substitution successful."}, status=status.HTTP_200_OK)
 
-
 class PressConferenceView(APIView):
     permission_classes = [IsAuthenticated]
 
@@ -276,8 +271,8 @@ class PressConferenceView(APIView):
         Press Conference 정보를 불러오는 뷰
         """
         try:
-            press_conference = PressConference.objects.get(match_id=match_id)
-        except PressConference.DoesNotExist:
+            press_conference = "match.PressConference".objects.get(match_id=match_id)
+        except "match.PressConference".DoesNotExist:
             return Response({"error": "Press Conference not found."}, status=status.HTTP_404_NOT_FOUND)
 
         # Press Conference 정보 반환 (참가자, 질문 등)
@@ -289,8 +284,8 @@ class PressConferenceView(APIView):
         질문 생성 및 답변 처리. 처음 호출 시 질문을 생성하고, 그 후로는 답변을 받아 처리.
         """
         try:
-            press_conference = PressConference.objects.get(match_id=match_id)
-        except PressConference.DoesNotExist:
+            press_conference = "match.PressConference".objects.get(match_id=match_id)
+        except "match.PressConference".DoesNotExist:
             return Response({"error": "Press Conference not found."}, status=status.HTTP_404_NOT_FOUND)
 
         # 질문 생성이 필요하면
@@ -311,8 +306,8 @@ class PressConferenceView(APIView):
         대화를 추가로 이어갈 때 사용할 수 있는 뷰.
         """
         try:
-            press_conference = PressConference.objects.get(match_id=match_id)
-        except PressConference.DoesNotExist:
+            press_conference = "match.PressConference".objects.get(match_id=match_id)
+        except "match.PressConference".DoesNotExist:
             return Response({"error": "Press Conference not found."}, status=status.HTTP_404_NOT_FOUND)
 
         # 추가 대화 저장
@@ -331,29 +326,29 @@ class StartPressConferenceView(APIView):
         Press Conference 시작 뷰. 처음 실행 시 사용자를 참가자로 추가하고, 첫 질문 생성.
         """
         try:
-            match = Match.objects.get(id=match_id)
-        except Match.DoesNotExist:
+            match = "match.Match".objects.get(id=match_id)
+        except "match.Match".DoesNotExist:
             return Response({"error": "Match not found."}, status=status.HTTP_404_NOT_FOUND)
 
         # 이미 Press Conference가 있으면
-        if PressConference.objects.filter(match=match).exists():
+        if "match.PressConference".objects.filter(match=match).exists():
             return Response({"error": "Press Conference already exists for this match."}, status=status.HTTP_400_BAD_REQUEST)
 
         # Press Conference 생성
-        press_conference = PressConference.objects.create(match=match)
+        press_conference = "match.PressConference".objects.create(match=match)
         press_conference.participants.set(match.participants.all())  # 참가자 설정
         press_conference.generate_questions()  # 질문 생성
 
         return Response({"message": "Press Conference started and questions generated."}, status=status.HTTP_201_CREATED)
-    
+
 class TeamTalkView(APIView):
     permission_classes = [IsAuthenticated]
 
     def post(self, request, match_id, team_id):
         try:
-            match = Match.objects.get(id=match_id)
-            team = TeamPlayer.objects.get(id=team_id, match=match)
-        except (Match.DoesNotExist, TeamPlayer.DoesNotExist):
+            match = "match.Match".objects.get(id=match_id)
+            team = "match.TeamPlayer".objects.get(id=team_id, match=match)
+        except ("match.Match".DoesNotExist, "match.TeamPlayer".DoesNotExist):
             return Response({"error": "Match or team not found."}, status=status.HTTP_404_NOT_FOUND)
 
         # 채팅 메시지 가져오기
@@ -362,7 +357,7 @@ class TeamTalkView(APIView):
             return Response({"error": "Message content is required."}, status=status.HTTP_400_BAD_REQUEST)
 
         # 채팅 로그에 저장
-        team_talk, created = TeamTalk.objects.get_or_create(match=match, team=team)
+        team_talk, created = "match.TeamTalk".objects.get_or_create(match=match, team=team)
         team_talk.chat_log.append({
             "user": request.user.username,
             "message": message,
@@ -371,14 +366,14 @@ class TeamTalkView(APIView):
         team_talk.save()
 
         return Response({"message": "Message sent.", "chat_log": team_talk.chat_log}, status=status.HTTP_200_OK)
-    
+
 class SubmitReviewView(APIView):
     permission_classes = [IsAuthenticated]
 
     def post(self, request, match_id, *args, **kwargs):
         try:
-            match = Match.objects.get(id=match_id)
-        except Match.DoesNotExist:
+            match = "match.Match".objects.get(id=match_id)
+        except "match.Match".DoesNotExist:
             return Response({"error": "Match not found."}, status=status.HTTP_404_NOT_FOUND)
 
         # 플레이어 리뷰 작성
@@ -388,7 +383,7 @@ class SubmitReviewView(APIView):
             if review_data:
                 player_review_serializer = PlayerReviewSerializer(data=review_data)
                 if player_review_serializer.is_valid():
-                    PlayerReview.objects.create(
+                    "match.PlayerReview".objects.create(
                         match=match,
                         reviewer=request.user,
                         player=player.user,
@@ -402,7 +397,7 @@ class SubmitReviewView(APIView):
         if ground_review_data:
             ground_review_serializer = GroundReviewSerializer(data=ground_review_data)
             if ground_review_serializer.is_valid():
-                GroundReview.objects.create(
+                "match.GroundReview".objects.create(
                     match=match,
                     reviewer=request.user,
                     ground=match.sports_ground,
@@ -412,3 +407,5 @@ class SubmitReviewView(APIView):
                 return Response(ground_review_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
         return Response({"message": "Reviews submitted successfully."}, status=status.HTTP_201_CREATED)
+                         
+                         

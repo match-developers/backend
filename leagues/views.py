@@ -2,21 +2,15 @@ from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework.permissions import IsAuthenticated
-from leagues.models.league import League, LeagueStatus
-from leagues.models.league_match import LeagueMatch
-from matchmaking.models.match import Match
-from matchmaking.models.team import Team
-from newsfeed.models.newsfeed import Newsfeed, NewsfeedPost
-
-from leagues.serializers import LeagueSerializer, LeagueStatusSerializer, LeagueMatchSerializer
 from django.utils import timezone
 from rest_framework.exceptions import ValidationError
 
+# 문자열 참조로 수정
 class LeagueCreateView(APIView):
     permission_classes = [IsAuthenticated]
 
     def post(self, request, *args, **kwargs):
-        serializer = LeagueSerializer(data=request.data, context={'request': request})
+        serializer = "leagues.serializers.LeagueSerializer"(data=request.data, context={'request': request})
         if serializer.is_valid():
             league = serializer.save(organizer=request.user)
             if league.league_type == 'individual':
@@ -27,7 +21,7 @@ class LeagueCreateView(APIView):
 
             return Response({
                 "message": "League created successfully.",
-                "league": LeagueSerializer(league).data
+                "league": "leagues.serializers.LeagueSerializer"(league).data
             }, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
@@ -37,16 +31,16 @@ class LeagueDetailView(APIView):
 
     def get(self, request, league_id, *args, **kwargs):
         try:
-            league = League.objects.get(id=league_id)
-        except League.DoesNotExist:
+            league = "leagues.models.league.League".objects.get(id=league_id)  # 문자열 참조
+        except "leagues.models.league.League".DoesNotExist:
             return Response({"error": "League not found."}, status=status.HTTP_404_NOT_FOUND)
 
-        league_serializer = LeagueSerializer(league)
-        league_status = LeagueStatus.objects.filter(league=league)
-        status_serializer = LeagueStatusSerializer(league_status, many=True)
+        league_serializer = "leagues.serializers.LeagueSerializer"(league)  # 문자열 참조
+        league_status = "leagues.models.league.LeagueStatus".objects.filter(league=league)  # 문자열 참조
+        status_serializer = "leagues.serializers.LeagueStatusSerializer"(league_status, many=True)  # 문자열 참조
 
-        matches = LeagueMatch.objects.filter(league=league)
-        matches_serializer = LeagueMatchSerializer(matches, many=True)
+        matches = "leagues.models.league_match.LeagueMatch".objects.filter(league=league)  # 문자열 참조
+        matches_serializer = "leagues.serializers.LeagueMatchSerializer"(matches, many=True)  # 문자열 참조
 
         return Response({
             "league": league_serializer.data,
@@ -60,16 +54,16 @@ class LeagueUpdateView(APIView):
 
     def put(self, request, league_id, *args, **kwargs):
         try:
-            league = League.objects.get(id=league_id, organizer=request.user)
-        except League.DoesNotExist:
+            league = "leagues.models.league.League".objects.get(id=league_id, organizer=request.user)  # 문자열 참조
+        except "leagues.models.league.League".DoesNotExist:
             return Response({"error": "League not found or permission denied."}, status=status.HTTP_404_NOT_FOUND)
 
-        serializer = LeagueSerializer(league, data=request.data, partial=True, context={'request': request})
+        serializer = "leagues.serializers.LeagueSerializer"(league, data=request.data, partial=True, context={'request': request})  # 문자열 참조
         if serializer.is_valid():
             serializer.save()
             return Response({
                 "message": "League updated successfully.",
-                "league": LeagueSerializer(league).data
+                "league": "leagues.serializers.LeagueSerializer"(league).data  # 문자열 참조
             }, status=status.HTTP_200_OK)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
@@ -79,8 +73,8 @@ class LeagueDeleteView(APIView):
 
     def delete(self, request, league_id, *args, **kwargs):
         try:
-            league = League.objects.get(id=league_id, organizer=request.user)
-        except League.DoesNotExist:
+            league = "leagues.models.league.League".objects.get(id=league_id, organizer=request.user)  # 문자열 참조
+        except "leagues.models.league.League".DoesNotExist:
             return Response({"error": "League not found or permission denied."}, status=status.HTTP_404_NOT_FOUND)
 
         league.delete()
@@ -92,8 +86,8 @@ class JoinLeagueView(APIView):
 
     def post(self, request, league_id, *args, **kwargs):
         try:
-            league = League.objects.get(id=league_id)
-        except League.DoesNotExist:
+            league = "leagues.models.league.League".objects.get(id=league_id)  # 문자열 참조
+        except "leagues.models.league.League".DoesNotExist:
             return Response({"error": "League not found."}, status=status.HTTP_404_NOT_FOUND)
 
         user = request.user
@@ -105,7 +99,7 @@ class JoinLeagueView(APIView):
                 return Response({"error": "You must belong to a club to join this league."}, status=status.HTTP_400_BAD_REQUEST)
             league.participants.add(user.current_club)
         else:
-            team = Team.objects.create(name=f"{user.username}'s Team", league=league)
+            team = "matchmaking.models.team.Team".objects.create(name=f"{user.username}'s Team", league=league)  # 문자열 참조
             team.members.add(user)
             league.participants.add(team)
 
@@ -120,8 +114,8 @@ class JoinLeagueView(APIView):
         
         # 팔로워들의 뉴스피드에 해당 리그 포스트 추가
         for follower_id in followers:
-            follower_newsfeed = Newsfeed.objects.get(user_id=follower_id)
-            NewsfeedPost.objects.create(
+            follower_newsfeed = "newsfeed.models.newsfeed.Newsfeed".objects.get(user_id=follower_id)  # 문자열 참조
+            "newsfeed.models.newsfeed.NewsfeedPost".objects.create(  # 문자열 참조
                 newsfeed=follower_newsfeed,
                 post_type="league",
                 post_id=league.id,
@@ -135,10 +129,10 @@ class LeagueMatchCompleteView(APIView):
 
     def post(self, request, match_id, *args, **kwargs):
         try:
-            match = Match.objects.get(id=match_id)
-            league_match = LeagueMatch.objects.get(match=match)
+            match = "matchmaking.models.match.Match".objects.get(id=match_id)  # 문자열 참조
+            league_match = "leagues.models.league_match.LeagueMatch".objects.get(match=match)  # 문자열 참조
             league = league_match.league
-        except (Match.DoesNotExist, LeagueMatch.DoesNotExist):
+        except ("matchmaking.models.match.Match".DoesNotExist, "leagues.models.league_match.LeagueMatch".DoesNotExist):
             return Response({"error": "Match or League not found."}, status=status.HTTP_404_NOT_FOUND)
 
         # 매치 상태를 완료로 업데이트
@@ -149,7 +143,7 @@ class LeagueMatchCompleteView(APIView):
         match.save()
 
         # 리그의 모든 매치가 완료되었는지 확인
-        all_matches_completed = LeagueMatch.objects.filter(league=league, match__status__in=['scheduled', 'ongoing']).count() == 0
+        all_matches_completed = "leagues.models.league_match.LeagueMatch".objects.filter(league=league, match__status__in=['scheduled', 'ongoing']).count() == 0  # 문자열 참조
         
         if all_matches_completed:
             if league.current_round < league.total_number_of_rounds:

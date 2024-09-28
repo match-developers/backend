@@ -48,12 +48,13 @@ INSTALLED_APPS = [
     "corsheaders",
     "model_utils",
     "django_extensions",
+    
     "accounts",
     "clubs",
-    "leagues",
+    "sportsgrounds",
     "matchmaking",
     "newsfeed",
-    "sportsgrounds",
+    "leagues",
     "tournaments",
 ]
 
@@ -127,7 +128,7 @@ TEMPLATES = [
     },
 ]
 
-AUTH_USER_MODEL = "accounts.Account"
+AUTH_USER_MODEL = "accounts.User"
 
 SITE_ID = 1
 
@@ -152,13 +153,13 @@ LOGGING = {
 # https://docs.djangoproject.com/en/4.2/ref/settings/#databases
 
 DATABASES = {
-    "default": {
-        "ENGINE": "django.contrib.gis.db.backends.postgis",
-        "NAME": config("POSTGRES_NAME"),
-        "USER": config("POSTGRES_USER"),
-        "PASSWORD": config("POSTGRES_PASSWORD"),
-        "HOST": config("POSTGRES_HOST"),
-        "PORT": config("POSTGRES_PORT"),
+    'default': {
+        'ENGINE': 'django.contrib.gis.db.backends.postgis',
+        'NAME': 'match_backend',
+        'USER': 'koh',
+        'PASSWORD': 'brian1104!',
+        'HOST': 'localhost',
+        'PORT': '5432',
     }
 }
 

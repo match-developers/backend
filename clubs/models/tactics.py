@@ -1,6 +1,4 @@
 from django.db import models
-from clubs.models.clubs import Club
-from accounts.models.users import User
 
 class Member(models.Model):
     """
@@ -13,8 +11,8 @@ class Member(models.Model):
         ('other', 'Other'),
     ]
 
-    club = models.ForeignKey(Club, on_delete=models.CASCADE, related_name="members")  # 클럽과 연결
-    user = models.ForeignKey(User, on_delete=models.CASCADE)  # 멤버인 유저
+    club = models.ForeignKey('clubs.Club', on_delete=models.CASCADE, related_name="belongs_to")  # 클럽과 연결
+    user = models.ForeignKey('accounts.User', on_delete=models.CASCADE, related_name="club_members")  # 멤버인 유저
     role = models.CharField(max_length=20, choices=ROLE_CHOICES, default='other')  # 멤버의 역할(선발, 교체, 기타)
 
     def __str__(self):
@@ -26,8 +24,8 @@ class Lineup(models.Model):
     라인업을 관리하는 모델.
     선발 멤버와 포메이션을 관리.
     """
-    club = models.ForeignKey(Club, on_delete=models.CASCADE, related_name="lineups")  # 클럽과 연결
-    created_by = models.ForeignKey(User, on_delete=models.CASCADE)  # 라인업을 만든 사람
+    club = models.ForeignKey('clubs.Club', on_delete=models.CASCADE, related_name="lineups")  # 클럽과 연결
+    created_by = models.ForeignKey('accounts.User', on_delete=models.CASCADE)  # 라인업을 만든 사람
     starters = models.ManyToManyField(Member, related_name='starters')  # 선발 멤버들
     substitutes = models.ManyToManyField(Member, related_name='substitutes')  # 교체 멤버들
     
@@ -59,8 +57,8 @@ class Tactic(models.Model):
     클럽의 전술을 관리하는 모델.
     전술에 대한 설명과 여러 전술을 추가 및 관리할 수 있음.
     """
-    club = models.ForeignKey(Club, on_delete=models.CASCADE, related_name="tactics")  # 클럽과 연결
-    created_by = models.ForeignKey(User, on_delete=models.CASCADE)  # 전술을 만든 사람
+    club = models.ForeignKey('clubs.Club', on_delete=models.CASCADE, related_name="tactics")  # 클럽과 연결
+    created_by = models.ForeignKey('accounts.User', on_delete=models.CASCADE)  # 전술을 만든 사람
     name = models.CharField(max_length=255)  # 전술의 이름
     tactic_explanation = models.TextField(blank=True, null=True)  # 전술 설명
     created_at = models.DateTimeField(auto_now_add=True)  # 전술 생성일

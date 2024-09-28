@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from newsfeed.models.newsfeed import Newsfeed, NewsfeedPost
+from newsfeed.models.newsfeed import NewsfeedPost
 from newsfeed.models.match_post import MatchPost
 from newsfeed.models.league_post import LeaguePost
 from newsfeed.models.tournament_post import TournamentPost

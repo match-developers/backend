@@ -2,6 +2,7 @@ from django.contrib.auth.models import AbstractBaseUser, PermissionsMixin
 from django.db import models
 from django.contrib.gis.db import models as gis_models
 from .managers import CustomUserManager
+
 from clubs.models.clubs import Club
 from sportsgrounds.models.sports_ground import SportsGround  # 스포츠 그라운드 모델 추가
 from leagues.models.league import League
@@ -106,3 +107,12 @@ class UserStatistics(models.Model):
 
     def __str__(self):
         return f"{self.user.username} - Statistics"
+    
+class PlaystyleTest(models.Model):
+    user_statistics = models.ForeignKey(UserStatistics, on_delete=models.CASCADE)
+    questions = models.JSONField()
+    result = models.CharField(max_length=255)
+    taken_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.user_statistics.user.username}'s Playstyle Test Result: {self.result}"

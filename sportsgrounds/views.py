@@ -4,20 +4,17 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework import status
 from django.shortcuts import get_object_or_404
 from django.core.exceptions import ValidationError
-from sportsgrounds.models.sports_ground import SportsGround, Booking
-from sportsgrounds.models.facilities import Facilities, TimeSlot
 
 from matchmaking.serializers import MatchSerializer
 from sportsgrounds.serializers import SportsGroundSerializer, BookingSerializer, TimeSlotSerializer, FacilitiesSerializer
-from matchmaking.models.match import Match
-from accounts.models.users import User
+
 
 # 1. 스포츠 그라운드 조회
 class SportsGroundDetailView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request, ground_id):
-        sports_ground = get_object_or_404(SportsGround, id=ground_id)
+        sports_ground = get_object_or_404("sportsgrounds.SportsGround", id=ground_id)
         serializer = SportsGroundSerializer(sports_ground)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
@@ -30,8 +27,8 @@ class FacilityTimeSlotView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request, facility_id):
-        facility = get_object_or_404(Facilities, id=facility_id)
-        time_slots = TimeSlot.objects.filter(facility=facility)
+        facility = get_object_or_404("sportsgrounds.Facilities", id=facility_id)
+        time_slots = "sportsgrounds.TimeSlot".objects.filter(facility=facility)
         serializer = TimeSlotSerializer(time_slots, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
@@ -45,13 +42,13 @@ class CreateBookingView(APIView):
         facility_id = request.data.get('facility_id')
         time_slot_id = request.data.get('time_slot_id')
 
-        facility = get_object_or_404(Facilities, id=facility_id)
-        time_slot = get_object_or_404(TimeSlot, id=time_slot_id)
+        facility = get_object_or_404("sportsgrounds.Facilities", id=facility_id)
+        time_slot = get_object_or_404("sportsgrounds.TimeSlot", id=time_slot_id)
 
         if time_slot.is_reserved:
             return Response({"error": "This time slot is already reserved."}, status=status.HTTP_400_BAD_REQUEST)
 
-        booking = Booking.objects.create(
+        booking = "sportsgrounds.Booking".objects.create(
             sports_ground=facility.sports_ground,
             facility=facility,
             user=user,
@@ -67,7 +64,7 @@ class ManageBookingView(APIView):
     permission_classes = [IsAuthenticated]
 
     def post(self, request, booking_id, action):
-        booking = get_object_or_404(Booking, id=booking_id)
+        booking = get_object_or_404("sportsgrounds.Booking", id=booking_id)
         sports_ground = booking.sports_ground
 
         if not sports_ground.is_owner(request.user):
@@ -91,7 +88,7 @@ class CancelBookingView(APIView):
     permission_classes = [IsAuthenticated]
 
     def post(self, request, booking_id):
-        booking = get_object_or_404(Booking, id=booking_id)
+        booking = get_object_or_404("sportsgrounds.Booking", id=booking_id)
 
         if booking.user != request.user:
             return Response({"error": "You do not have permission to cancel this booking."}, status=status.HTTP_403_FORBIDDEN)
@@ -105,7 +102,7 @@ class FollowSportsGroundView(APIView):
     permission_classes = [IsAuthenticated]
 
     def post(self, request, ground_id):
-        sports_ground = get_object_or_404(SportsGround, id=ground_id)
+        sports_ground = get_object_or_404("sportsgrounds.SportsGround", id=ground_id)
         user = request.user
 
         if user in sports_ground.followers.all():
@@ -119,7 +116,7 @@ class UnfollowSportsGroundView(APIView):
     permission_classes = [IsAuthenticated]
 
     def post(self, request, ground_id):
-        sports_ground = get_object_or_404(SportsGround, id=ground_id)
+        sports_ground = get_object_or_404("sportsgrounds.SportsGround", id=ground_id)
         user = request.user
 
         if user in sports_ground.followers.all():
@@ -131,8 +128,8 @@ class UnfollowSportsGroundView(APIView):
 class FacilityListView(APIView):
     def get(self, request, ground_id):
         try:
-            sportsground = SportsGround.objects.get(id=ground_id)
-        except SportsGround.DoesNotExist:
+            sportsground = "sportsgrounds.SportsGround".objects.get(id=ground_id)
+        except "sportsgrounds.SportsGround".DoesNotExist:
             return Response({"error": "Sports ground not found"}, status=status.HTTP_404_NOT_FOUND)
         
         facilities = sportsground.facilities.all()
@@ -142,26 +139,26 @@ class FacilityListView(APIView):
 class SportsGroundMatchListView(APIView):
     def get(self, request, ground_id):
         try:
-            sportsground = SportsGround.objects.get(id=ground_id)
-        except SportsGround.DoesNotExist:
+            sportsground = "sportsgrounds.SportsGround".objects.get(id=ground_id)
+        except "sportsgrounds.SportsGround".DoesNotExist:
             return Response({"error": "Sports ground not found"}, status=status.HTTP_404_NOT_FOUND)
         
-        matches = Match.objects.filter(sports_ground=sportsground)
+        matches = "matchmaking.Match".objects.filter(sports_ground=sportsground)
         serializer = MatchSerializer(matches, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
     
 #booking related views
 class BookingListView(APIView):
     def get(self, request):
-        bookings = Booking.objects.all()
+        bookings = "sportsgrounds.Booking".objects.all()
         serializer = BookingSerializer(bookings, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
 class BookingDetailView(APIView):
     def get(self, request, booking_id):
         try:
-            booking = Booking.objects.get(id=booking_id)
-        except Booking.DoesNotExist:
+            booking = "sportsgrounds.Booking".objects.get(id=booking_id)
+        except "sportsgrounds.Booking".DoesNotExist:
             return Response({"error": "Booking not found"}, status=status.HTTP_404_NOT_FOUND)
         
         serializer = BookingSerializer(booking)
@@ -170,26 +167,26 @@ class BookingDetailView(APIView):
 class ConfirmBookingView(APIView):
     def post(self, request, booking_id):
         try:
-            booking = Booking.objects.get(id=booking_id)
+            booking = "sportsgrounds.Booking".objects.get(id=booking_id)
             booking.confirm_booking(request.user)
             return Response({"message": "Booking confirmed"}, status=status.HTTP_200_OK)
-        except Booking.DoesNotExist:
+        except "sportsgrounds.Booking".DoesNotExist:
             return Response({"error": "Booking not found"}, status=status.HTTP_404_NOT_FOUND)
 
 class DeclineBookingView(APIView):
     def post(self, request, booking_id):
         try:
-            booking = Booking.objects.get(id=booking_id)
+            booking = "sportsgrounds.Booking".objects.get(id=booking_id)
             booking.decline_booking(request.user)
             return Response({"message": "Booking declined"}, status=status.HTTP_200_OK)
-        except Booking.DoesNotExist:
+        except "sportsgrounds.Booking".DoesNotExist:
             return Response({"error": "Booking not found"}, status=status.HTTP_404_NOT_FOUND)
 
 class CancelBookingView(APIView):
     def post(self, request, booking_id):
         try:
-            booking = Booking.objects.get(id=booking_id)
+            booking = "sportsgrounds.Booking".objects.get(id=booking_id)
             booking.cancel_booking()
             return Response({"message": "Booking canceled"}, status=status.HTTP_200_OK)
-        except Booking.DoesNotExist:
+        except "sportsgrounds.Booking".DoesNotExist:
             return Response({"error": "Booking not found"}, status=status.HTTP_404_NOT_FOUND)

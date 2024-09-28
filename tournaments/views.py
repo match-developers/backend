@@ -2,14 +2,10 @@ from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework.permissions import IsAuthenticated
-from tournaments.models.tournament import Tournament, TournamentStatus
-from tournaments.models.tournament_match import TournamentMatch
-from matchmaking.models.match import Match
-from matchmaking.models.team import Team
+from django.utils import timezone
 from newsfeed.models.newsfeed import Newsfeed, NewsfeedPost
 
 from tournaments.serializers import TournamentSerializer, TournamentStatusSerializer, TournamentMatchSerializer
-from django.utils import timezone
 
 
 class TournamentCreateView(APIView):
@@ -21,7 +17,7 @@ class TournamentCreateView(APIView):
             tournament = serializer.save(organizer=request.user)
             # 팀 자동 생성 및 참가
             for i in range(1, tournament.max_teams + 1):
-                team = Team.objects.create(name=f"Team {i}", tournament=tournament)
+                team = "matchmaking.Team".objects.create(name=f"Team {i}", tournament=tournament)
                 tournament.participants.add(team)
             
             tournament.save()
@@ -41,15 +37,15 @@ class TournamentDetailView(APIView):
 
     def get(self, request, tournament_id, *args, **kwargs):
         try:
-            tournament = Tournament.objects.get(id=tournament_id)
-        except Tournament.DoesNotExist:
+            tournament = "tournaments.Tournament".objects.get(id=tournament_id)
+        except "tournaments.Tournament".DoesNotExist:
             return Response({"error": "Tournament not found."}, status=status.HTTP_404_NOT_FOUND)
 
         tournament_serializer = TournamentSerializer(tournament)
-        tournament_status = TournamentStatus.objects.filter(tournament=tournament)
+        tournament_status = "tournaments.TournamentStatus".objects.filter(tournament=tournament)
         status_serializer = TournamentStatusSerializer(tournament_status, many=True)
 
-        matches = TournamentMatch.objects.filter(tournament=tournament)
+        matches = "tournaments.TournamentMatch".objects.filter(tournament=tournament)
         matches_serializer = TournamentMatchSerializer(matches, many=True)
 
         return Response({
@@ -64,8 +60,8 @@ class TournamentUpdateView(APIView):
 
     def put(self, request, tournament_id, *args, **kwargs):
         try:
-            tournament = Tournament.objects.get(id=tournament_id, organizer=request.user)
-        except Tournament.DoesNotExist:
+            tournament = "tournaments.Tournament".objects.get(id=tournament_id, organizer=request.user)
+        except "tournaments.Tournament".DoesNotExist:
             return Response({"error": "Tournament not found or permission denied."}, status=status.HTTP_404_NOT_FOUND)
 
         serializer = TournamentSerializer(tournament, data=request.data, partial=True, context={'request': request})
@@ -83,8 +79,8 @@ class TournamentDeleteView(APIView):
 
     def delete(self, request, tournament_id, *args, **kwargs):
         try:
-            tournament = Tournament.objects.get(id=tournament_id, organizer=request.user)
-        except Tournament.DoesNotExist:
+            tournament = "tournaments.Tournament".objects.get(id=tournament_id, organizer=request.user)
+        except "tournaments.Tournament".DoesNotExist:
             return Response({"error": "Tournament not found or permission denied."}, status=status.HTTP_404_NOT_FOUND)
 
         tournament.delete()
@@ -96,8 +92,8 @@ class JoinTournamentView(APIView):
 
     def post(self, request, tournament_id, *args, **kwargs):
         try:
-            tournament = Tournament.objects.get(id=tournament_id)
-        except Tournament.DoesNotExist:
+            tournament = "tournaments.Tournament".objects.get(id=tournament_id)
+        except "tournaments.Tournament".DoesNotExist:
             return Response({"error": "Tournament not found."}, status=status.HTTP_404_NOT_FOUND)
 
         user = request.user
@@ -109,7 +105,7 @@ class JoinTournamentView(APIView):
                 return Response({"error": "You must belong to a club to join this tournament."}, status=status.HTTP_400_BAD_REQUEST)
             tournament.participants.add(user.current_club)
         else:
-            team = Team.objects.create(name=f"{user.username}'s Team", tournament=tournament)
+            team = "matchmaking.Team".objects.create(name=f"{user.username}'s Team", tournament=tournament)
             team.members.add(user)
             tournament.participants.add(team)
 
@@ -140,12 +136,12 @@ class MatchCompleteView(APIView):
 
     def post(self, request, match_id):
         try:
-            match = Match.objects.get(id=match_id)
+            match = "matchmaking.Match".objects.get(id=match_id)
             match.complete()  # 경기 완료 처리
             tournament = match.tournament
 
             # 해당 라운드의 모든 경기가 끝났는지 확인
-            remaining_matches = TournamentMatch.objects.filter(
+            remaining_matches = "tournaments.TournamentMatch".objects.filter(
                 tournament=tournament, round_number=tournament.current_round, match__status='scheduled'
             )
             if not remaining_matches.exists():
@@ -159,5 +155,5 @@ class MatchCompleteView(APIView):
             
             return Response({"message": "Match completed successfully."}, status=status.HTTP_200_OK)
 
-        except Match.DoesNotExist:
+        except "matchmaking.Match".DoesNotExist:
             return Response({"error": "Match not found."}, status=status.HTTP_404_NOT_FOUND)

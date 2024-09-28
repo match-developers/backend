@@ -2,13 +2,6 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 from rest_framework import status
-from clubs.models.clubs import Club
-from clubs.models.club_statistics import ClubStatistics
-from clubs.models.tactics import Tactic
-from accounts.models.users import User
-from newsfeed.models.newsfeed import NewsfeedPost
-from clubs.serializers import ClubSerializer, ClubStatisticsSerializer, ClubMemberSerializer
-from newsfeed.serializers import NewsfeedPostSerializer
 
 ### 1. 클럽 프로필 조회
 class ClubProfileView(APIView):
@@ -16,22 +9,22 @@ class ClubProfileView(APIView):
 
     def get(self, request, club_id):
         try:
-            club = Club.objects.get(id=club_id)
-        except Club.DoesNotExist:
+            club = "clubs.Club".objects.get(id=club_id)  # 문자열 참조
+        except "clubs.Club".DoesNotExist:
             return Response({"error": "Club not found"}, status=status.HTTP_404_NOT_FOUND)
 
         # 클럽 기본 정보와 통계 정보 반환
-        club_serializer = ClubSerializer(club)
-        club_stats = ClubStatistics.objects.get(club=club)
-        stats_serializer = ClubStatisticsSerializer(club_stats)
+        club_serializer = "clubs.serializers.ClubSerializer"(club)  # 문자열 참조
+        club_stats = "clubs.ClubStatistics".objects.get(club=club)  # 문자열 참조
+        stats_serializer = "clubs.serializers.ClubStatisticsSerializer"(club_stats)  # 문자열 참조
         
         # 클럽 관련 뉴스피드 게시물
-        newsfeed_posts = NewsfeedPost.objects.filter(club=club)
-        newsfeed_serializer = NewsfeedPostSerializer(newsfeed_posts, many=True)
+        newsfeed_posts = "newsfeed.NewsfeedPost".objects.filter(club=club)  # 문자열 참조
+        newsfeed_serializer = "newsfeed.serializers.NewsfeedPostSerializer"(newsfeed_posts, many=True)  # 문자열 참조
         
         # 클럽 멤버 목록
         members = club.members.all()
-        member_serializer = ClubMemberSerializer(members, many=True)
+        member_serializer = "clubs.serializers.ClubMemberSerializer"(members, many=True)  # 문자열 참조
 
         return Response({
             "club": club_serializer.data,
@@ -46,8 +39,8 @@ class FollowClubView(APIView):
 
     def post(self, request, club_id):
         try:
-            club = Club.objects.get(id=club_id)
-        except Club.DoesNotExist:
+            club = "clubs.Club".objects.get(id=club_id)  # 문자열 참조
+        except "clubs.Club".DoesNotExist:
             return Response({"error": "Club not found"}, status=status.HTTP_404_NOT_FOUND)
 
         user = request.user
@@ -70,8 +63,8 @@ class JoinOrQuitClubView(APIView):
 
     def post(self, request, club_id):
         try:
-            club = Club.objects.get(id=club_id)
-        except Club.DoesNotExist:
+            club = "clubs.Club".objects.get(id=club_id)  # 문자열 참조
+        except "clubs.Club".DoesNotExist:
             return Response({"error": "Club not found"}, status=status.HTTP_404_NOT_FOUND)
 
         user = request.user
@@ -93,9 +86,9 @@ class ManageClubMemberView(APIView):
         action은 'assign_permission', 'remove_permission', 'accept_request', 'decline_request' 중 하나.
         """
         try:
-            club = Club.objects.get(id=club_id)
-            member = User.objects.get(id=member_id)
-        except (Club.DoesNotExist, User.DoesNotExist):
+            club = "clubs.Club".objects.get(id=club_id)  # 문자열 참조
+            member = "accounts.User".objects.get(id=member_id)  # 문자열 참조
+        except ("clubs.Club".DoesNotExist, "accounts.User".DoesNotExist):
             return Response({"error": "Club or member not found"}, status=status.HTTP_404_NOT_FOUND)
 
         user = request.user
@@ -135,8 +128,8 @@ class CreateLineupView(APIView):
 
     def post(self, request, club_id):
         try:
-            club = Club.objects.get(id=club_id)
-        except Club.DoesNotExist:
+            club = "clubs.Club".objects.get(id=club_id)  # 문자열 참조
+        except "clubs.Club".DoesNotExist:
             return Response({"error": "Club not found"}, status=status.HTTP_404_NOT_FOUND)
 
         user = request.user
@@ -158,8 +151,8 @@ class ManageTacticView(APIView):
 
     def post(self, request, club_id):
         try:
-            club = Club.objects.get(id=club_id)
-        except Club.DoesNotExist:
+            club = "clubs.Club".objects.get(id=club_id)  # 문자열 참조
+        except "clubs.Club".DoesNotExist:
             return Response({"error": "Club not found"}, status=status.HTTP_404_NOT_FOUND)
 
         user = request.user
@@ -178,9 +171,9 @@ class ManageTacticView(APIView):
         특정 전술을 삭제하는 로직
         """
         try:
-            club = Club.objects.get(id=club_id)
-            tactic = club.tactics.get(id=tactic_id)
-        except (Club.DoesNotExist, Tactic.DoesNotExist):
+            club = "clubs.Club".objects.get(id=club_id)  # 문자열 참조
+            tactic = club.tactics.get(id=tactic_id)  # 문자열 참조
+        except ("clubs.Club".DoesNotExist, "clubs.Tactic".DoesNotExist):
             return Response({"error": "Club or tactic not found"}, status=status.HTTP_404_NOT_FOUND)
 
         user = request.user

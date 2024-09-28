@@ -1,4 +1,3 @@
-# accounts/views.py
 from django.core.mail import send_mail
 from django.template.loader import render_to_string
 from django.utils.http import urlsafe_base64_encode
@@ -15,18 +14,21 @@ from rest_framework.response import Response
 from rest_framework.permissions import AllowAny
 from rest_framework.views import APIView
 from rest_framework.permissions import IsAuthenticated
-from rest_framework import status
 
-
-
-from accounts.serializers import RegisterSerializer, LoginSerializer, SocialLoginSerializer, UserSerializer, UserStatisticsSerializer, PlaystyleTestSerializer, FollowUserSerializer
+from accounts.serializers import (
+    RegisterSerializer,
+    LoginSerializer,
+    SocialLoginSerializer,
+    UserSerializer,
+    UserStatisticsSerializer,
+    PlaystyleTestSerializer,
+    FollowUserSerializer,
+)
 from newsfeed.serializers import NewsfeedPostSerializer
 
-from newsfeed.models.newsfeed import NewsfeedPost
-from accounts.models.users import User, UserStatistics, PlaystyleTest
-
+# User 모델 문자열 참조
 class RegisterView(generics.CreateAPIView):
-    queryset = User.objects.all()
+    queryset = "accounts.User"  # User 모델 문자열 참조
     permission_classes = [AllowAny]
     serializer_class = RegisterSerializer
 
@@ -68,14 +70,14 @@ class SocialLoginView(APIView):
         user = serializer.validated_data
         login(request, user)
         return Response({"message": "Social login successful.", "user": UserSerializer(user).data}, status=status.HTTP_200_OK)
-    
+
 class PasswordResetView(APIView):
     def post(self, request, *args, **kwargs):
         email = request.data.get('email')
         if not email:
             raise ValidationError("Email is required.")
         
-        user = User.objects.filter(email=email).first()
+        user = "accounts.User".objects.filter(email=email).first()  # User 모델 문자열 참조
         if not user:
             raise ValidationError("No user with that email.")
 
@@ -92,9 +94,6 @@ class PasswordResetView(APIView):
         return Response({"message": "Password reset link sent to email."}, status=status.HTTP_200_OK)
 
     def send_password_reset_email(self, user, reset_url):
-        """
-        이메일을 보내는 로직을 별도로 함수로 분리
-        """
         subject = "Reset your password"
         message = render_to_string('accounts/password_reset_email.html', {'user': user, 'reset_url': reset_url})
         send_mail(
@@ -106,33 +105,25 @@ class PasswordResetView(APIView):
         ) 
         
 class UserProfileNewsfeedView(APIView):
-    """
-    유저가 생성/참가한 매치, 리그, 토너먼트와 관련된 뉴스피드를 조회하는 뷰
-    """
     permission_classes = [IsAuthenticated]
 
     def get(self, request, user_id, *args, **kwargs):
         try:
-            user = User.objects.get(id=user_id)
-        except User.DoesNotExist:
+            user = "accounts.User".objects.get(id=user_id)  # User 모델 문자열 참조
+        except "accounts.User".DoesNotExist:
             return Response({"error": "User not found"}, status=status.HTTP_404_NOT_FOUND)
         
-        # 유저가 생성 또는 참가한 매치, 리그, 토너먼트와 관련된 포스트만 필터링
-        posts = NewsfeedPost.objects.filter(
-            models.Q(creator=user) |  # 유저가 생성한 포스트
-            models.Q(match__participants__user=user) |  # 유저가 참가한 매치 포스트
-            models.Q(league__participants__user=user) |  # 유저가 참가한 리그 포스트
-            models.Q(tournament__participants__user=user)  # 유저가 참가한 토너먼트 포스트
+        posts = "newsfeed.NewsfeedPost".objects.filter(  # NewsfeedPost 모델 문자열 참조
+            models.Q(creator=user) |
+            models.Q(match__participants__user=user) |
+            models.Q(league__participants__user=user) |
+            models.Q(tournament__participants__user=user)
         ).distinct()
 
         serializer = NewsfeedPostSerializer(posts, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
-    
-    
+
 class EditUserProfileView(APIView):
-    """
-    유저 프로필 수정을 위한 뷰
-    """
     permission_classes = [IsAuthenticated]
 
     def put(self, request, *args, **kwargs):
@@ -144,17 +135,14 @@ class EditUserProfileView(APIView):
             return Response({"message": "Profile updated successfully."}, status=status.HTTP_200_OK)
         
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-    
+
 class FollowUserView(APIView):
-    """
-    다른 유저를 팔로우/언팔로우하는 뷰
-    """
     permission_classes = [IsAuthenticated]
 
     def post(self, request, user_id, *args, **kwargs):
         try:
-            target_user = User.objects.get(id=user_id)
-        except User.DoesNotExist:
+            target_user = "accounts.User".objects.get(id=user_id)  # User 모델 문자열 참조
+        except "accounts.User".DoesNotExist:
             return Response({"error": "User not found"}, status=status.HTTP_404_NOT_FOUND)
 
         user = request.user
@@ -166,32 +154,26 @@ class FollowUserView(APIView):
             return Response({"message": f"Followed {target_user.username}"}, status=status.HTTP_200_OK)
 
     def get(self, request, user_id, *args, **kwargs):
-        """
-        특정 유저의 팔로우/팔로워 정보 조회
-        """
         try:
-            target_user = User.objects.get(id=user_id)
-        except User.DoesNotExist:
+            target_user = "accounts.User".objects.get(id=user_id)  # User 모델 문자열 참조
+        except "accounts.User".DoesNotExist:
             return Response({"error": "User not found"}, status=status.HTTP_404_NOT_FOUND)
 
         serializer = FollowUserSerializer(target_user, context={'request': request})
         return Response(serializer.data, status=status.HTTP_200_OK)
-    
+
 class UserStatisticsView(APIView):
-    """
-    유저 통계 조회를 위한 뷰
-    """
     permission_classes = [IsAuthenticated]
 
     def get(self, request, user_id, *args, **kwargs):
         try:
-            stats = UserStatistics.objects.get(user_id=user_id)
-        except UserStatistics.DoesNotExist:
+            stats = "accounts.UserStatistics".objects.get(user_id=user_id)  # UserStatistics 모델 문자열 참조
+        except "accounts.UserStatistics".DoesNotExist:
             return Response({"error": "User statistics not found"}, status=status.HTTP_404_NOT_FOUND)
         
         serializer = UserStatisticsSerializer(stats)
         return Response(serializer.data, status=status.HTTP_200_OK)
-    
+
 # 간단한 20가지 질문의 예시
 PLAYSTYLE_QUESTIONS = [
     "공격적인 플레이를 선호하시나요?",
@@ -200,33 +182,22 @@ PLAYSTYLE_QUESTIONS = [
 ]
 
 class PlaystyleTestView(APIView):
-    """
-    유저의 플레이스타일 테스트를 위한 뷰
-    """
     permission_classes = [IsAuthenticated]
 
     def get(self, request, *args, **kwargs):
-        """
-        플레이스타일 테스트 질문을 제공하는 GET 메소드
-        """
         return Response({"questions": PLAYSTYLE_QUESTIONS}, status=status.HTTP_200_OK)
 
     def post(self, request, *args, **kwargs):
-        """
-        유저가 테스트를 완료한 후 결과를 저장하는 POST 메소드
-        """
         user = request.user
-        answers = request.data.get('answers')  # 유저가 선택한 답변
+        answers = request.data.get('answers')
         if len(answers) != 20:
             return Response({"error": "You must answer all 20 questions."}, status=status.HTTP_400_BAD_REQUEST)
 
-        # 결과 생성 (예: 단순히 공격형/수비형으로 분류)
         if answers.count('공격적인 플레이를 선호하시나요?') > 10:
             result = "Aggressive"
         else:
             result = "Defensive"
 
-        # 시리얼라이저를 사용해 데이터를 저장
         playstyle_test_data = {
             'user': user.id,
             'questions': answers,
@@ -239,4 +210,3 @@ class PlaystyleTestView(APIView):
             return Response({"message": "Playstyle test completed", "result": result}, status=status.HTTP_200_OK)
         else:
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-    

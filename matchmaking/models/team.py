@@ -1,10 +1,8 @@
 from django.db import models
-from accounts.models.users import User  # User 모델 참조
-from clubs.models.clubs import Club  # Club 모델 참조
 
 class Team(models.Model):
     name = models.CharField(max_length=255)  # 팀 이름 (자동 생성)
-    club = models.ForeignKey(Club, null=True, blank=True, on_delete=models.CASCADE)  # 클럽 소속 팀일 경우
+    club = models.ForeignKey('clubs.Club', null=True, blank=True, on_delete=models.CASCADE)  # Club을 문자열 참조로 변경
     is_red_team = models.BooleanField(default=True)  # Red Team, Blue Team 여부 (랜덤 경기일 경우에만 사용)
 
     def __str__(self):
@@ -18,7 +16,7 @@ class Team(models.Model):
         
 class TeamPlayer(models.Model):
     team = models.ForeignKey(Team, on_delete=models.CASCADE)  # 팀과 연결
-    user = models.ForeignKey(User, on_delete=models.CASCADE)  # 플레이어
+    user = models.ForeignKey('accounts.User', on_delete=models.CASCADE)  # User를 문자열 참조로 변경
     is_starting_player = models.BooleanField(default=True)  # 선발 선수 여부
 
     def __str__(self):
