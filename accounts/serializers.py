@@ -7,7 +7,7 @@ from .models.users import User, UserStatistics, PlaystyleTest
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ['email', 'username', 'first_name', 'last_name', 'profile_photo', 'bio']
+        fields = ['email', 'username', 'first_name', 'last_name', 'profile_photo', 'bio', 'location']
 
 class RegisterSerializer(serializers.ModelSerializer):
     password = serializers.CharField(write_only=True)

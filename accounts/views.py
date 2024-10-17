@@ -27,6 +27,18 @@ from accounts.serializers import (
 from newsfeed.serializers import NewsfeedPostSerializer
 
 # User 모델 문자열 참조
+
+class UserProfileView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, user_id, *args, **kwargs):
+        try:
+            user = models.get_model('accounts', 'User').objects.get(id=user_id)  # 문자열 참조로 User 접근
+            serializer = UserSerializer(user)
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        except models.get_model('accounts', 'User').DoesNotExist:
+            return Response({"error": "User not found"}, status=status.HTTP_404_NOT_FOUND)
+
 class RegisterView(generics.CreateAPIView):
     queryset = "accounts.User"  # User 모델 문자열 참조
     permission_classes = [AllowAny]
