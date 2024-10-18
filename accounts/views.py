@@ -7,6 +7,7 @@ from django.conf import settings
 from django.contrib.auth import login
 from django.contrib.auth import authenticate
 from django.db import models
+from django.apps import apps
 
 from rest_framework.exceptions import ValidationError
 from rest_framework import generics, status
@@ -205,39 +206,41 @@ class UserStatisticsView(APIView):
         serializer = UserStatisticsSerializer(stats)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
-# 간단한 20가지 질문의 예시
-PLAYSTYLE_QUESTIONS = [
-    "공격적인 플레이를 선호하시나요?",
-    "수비적인 플레이를 선호하시나요?",
-    # 나머지 18개의 질문
-]
-
-class PlaystyleTestView(APIView):
+        
+class UpdatePlaystyleView(APIView):
     permission_classes = [IsAuthenticated]
 
-    def get(self, request, *args, **kwargs):
-        return Response({"questions": PLAYSTYLE_QUESTIONS}, status=status.HTTP_200_OK)
+    def put(self, request):
+        playstyle_result = request.data.get('result')
+        questions = request.data.get('questions')
 
-    def post(self, request, *args, **kwargs):
-        user = request.user
-        answers = request.data.get('answers')
-        if len(answers) != 20:
-            return Response({"error": "You must answer all 20 questions."}, status=status.HTTP_400_BAD_REQUEST)
+        if not playstyle_result or not questions:
+            return Response(
+                {"error": "Both playstyle result and questions are required."}, 
+                status=status.HTTP_400_BAD_REQUEST
+            )
 
-        if answers.count('공격적인 플레이를 선호하시나요?') > 10:
-            result = "Aggressive"
-        else:
-            result = "Defensive"
+        # UserStatistics와 PlaystyleTest 모델을 동적으로 가져오기
+        UserStatistics = apps.get_model('accounts', 'UserStatistics')
+        PlaystyleTest = apps.get_model('your_app_name', 'PlaystyleTest')  # 'your_app_name'은 해당 모델의 앱 이름으로 교체
 
-        playstyle_test_data = {
-            'user': user.id,
-            'questions': answers,
-            'result': result
-        }
+        try:
+            user_statistics = UserStatistics.objects.get(user=request.user)
 
-        serializer = PlaystyleTestSerializer(data=playstyle_test_data)
-        if serializer.is_valid():
-            serializer.save()
-            return Response({"message": "Playstyle test completed", "result": result}, status=status.HTTP_200_OK)
-        else:
-            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+            # PlaystyleTest 업데이트 또는 생성
+            playstyle_test, created = PlaystyleTest.objects.update_or_create(
+                user_statistics=user_statistics,
+                defaults={
+                    'questions': questions,
+                    'result': playstyle_result
+                }
+            )
+
+            serializer = PlaystyleTestSerializer(playstyle_test)
+            return Response(serializer.data, status=status.HTTP_200_OK)
+
+        except UserStatistics.DoesNotExist:
+            return Response(
+                {"error": "User statistics not found."},
+                status=status.HTTP_404_NOT_FOUND
+            )

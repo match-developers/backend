@@ -60,9 +60,30 @@ class UserStatisticsSerializer(serializers.ModelSerializer):
                   'current_club', 'previous_clubs', 'current_league', 'current_tournament', 'playstyle']
         
 class PlaystyleTestSerializer(serializers.ModelSerializer):
+    user_statistics = serializers.PrimaryKeyRelatedField(
+        queryset=UserStatistics.objects.all(), required=True
+    )  # 유저 통계와 연결
+
     class Meta:
         model = PlaystyleTest
-        fields = ['questions', 'result', 'taken_at']
+        fields = ['user_statistics', 'questions', 'result', 'taken_at']
+        read_only_fields = ['taken_at']  # `taken_at` 필드는 읽기 전용
+
+    def create(self, validated_data):
+        """
+        플레이스타일 테스트 생성 또는 업데이트 로직.
+        """
+        user_statistics = validated_data.get('user_statistics')
+
+        # 해당 유저의 PlaystyleTest 인스턴스가 이미 있는지 확인
+        playstyle_test, created = PlaystyleTest.objects.update_or_create(
+            user_statistics=user_statistics,
+            defaults={
+                'questions': validated_data.get('questions'),
+                'result': validated_data.get('result')
+            }
+        )
+        return playstyle_test
         
         
 class FollowUserSerializer(serializers.ModelSerializer):
