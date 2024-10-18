@@ -23,6 +23,7 @@ from accounts.serializers import (
     UserStatisticsSerializer,
     PlaystyleTestSerializer,
     FollowUserSerializer,
+    PasswordChangeSerializer,
 )
 from newsfeed.serializers import NewsfeedPostSerializer
 
@@ -38,6 +39,14 @@ class UserProfileView(APIView):
             return Response(serializer.data, status=status.HTTP_200_OK)
         except models.get_model('accounts', 'User').DoesNotExist:
             return Response({"error": "User not found"}, status=status.HTTP_404_NOT_FOUND)
+
+class DeleteAccountView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def delete(self, request, *args, **kwargs):
+        user = request.user
+        user.delete()
+        return Response(status=204)
 
 class RegisterView(generics.CreateAPIView):
     queryset = "accounts.User"  # User 모델 문자열 참조
@@ -82,6 +91,16 @@ class SocialLoginView(APIView):
         user = serializer.validated_data
         login(request, user)
         return Response({"message": "Social login successful.", "user": UserSerializer(user).data}, status=status.HTTP_200_OK)
+
+class PasswordChangeView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def put(self, request, *args, **kwargs):
+        serializer = PasswordChangeSerializer(data=request.data, context={'request': request})
+        if serializer.is_valid(raise_exception=True):
+            serializer.save()
+            return Response({"message": "Password updated successfully."}, status=status.HTTP_200_OK)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 class PasswordResetView(APIView):
     def post(self, request, *args, **kwargs):

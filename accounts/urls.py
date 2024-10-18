@@ -1,7 +1,7 @@
 # accounts/urls.py
 
 from django.urls import path
-from .views import UserProfileView, RegisterView, LoginView, SocialLoginView, PasswordResetView, UserProfileNewsfeedView, EditUserProfileView, FollowUserView, UserStatisticsView, PlaystyleTestView
+from .views import UserProfileView, RegisterView, LoginView, SocialLoginView, PasswordResetView, PasswordChangeView, UserProfileNewsfeedView, EditUserProfileView, FollowUserView, UserStatisticsView, PlaystyleTestView, DeleteAccountView
 
 urlpatterns = [
     path('register/', RegisterView.as_view(), name='register'),
@@ -24,5 +24,10 @@ urlpatterns = [
     path('user/playstyle-test/', PlaystyleTestView.as_view(), name='playstyle-test'),
     
     path('user/<int:user_id>/', UserProfileView.as_view(), name='user-profile'),
+    
+    path('user/delete/', DeleteAccountView.as_view(), name='delete-account'),
+    
+    path('password-change/', PasswordChangeView.as_view(), name='password-change'),
+
 
 ]

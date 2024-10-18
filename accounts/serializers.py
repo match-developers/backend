@@ -1,5 +1,6 @@
 from rest_framework import serializers
 from django.contrib.auth import authenticate
+from django.contrib.auth.password_validation import validate_password
 
 from newsfeed.models.newsfeed import NewsfeedPost
 from .models.users import User, UserStatistics, PlaystyleTest
@@ -88,3 +89,25 @@ class FollowUserSerializer(serializers.ModelSerializer):
         if request and hasattr(request, 'user'):
             return obj.followers.filter(id=request.user.id).exists()
         return False
+    
+class PasswordChangeSerializer(serializers.Serializer):
+    old_password = serializers.CharField(write_only=True)
+    new_password = serializers.CharField(write_only=True)
+
+    def validate_new_password(self, value):
+        validate_password(value)  # 장고 기본 비밀번호 검증 사용
+        return value
+
+    def validate(self, data):
+        user = self.context['request'].user
+
+        if not user.check_password(data['old_password']):
+            raise serializers.ValidationError({"old_password": "Incorrect old password."})
+
+        return data
+
+    def save(self, **kwargs):
+        user = self.context['request'].user
+        user.set_password(self.validated_data['new_password'])
+        user.save()
+        return user
